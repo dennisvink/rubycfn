@@ -33,6 +33,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec-its", "~> 1.2"
   spec.add_development_dependency "rspec_junit_formatter", "~> 0.2"
   spec.add_development_dependency "simplecov", "~> 0.9"
-  spec.add_development_dependency "yard-activesupport-concern", "~> 0.0.1"
-  spec.add_development_dependency "yard", "~> 0.8"
 end
