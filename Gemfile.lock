@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubycfn (0.0.0)
+    rubycfn (0.0.1)
       activesupport (~> 5.1.5)
       json (~> 2.1.0)
       neatjson (~> 0.8.4)
@@ -97,9 +97,6 @@ GEM
     thread_safe (0.3.6)
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
-    yard (0.9.14)
-    yard-activesupport-concern (0.0.1)
-      yard (>= 0.8)
 
 PLATFORMS
   ruby
@@ -118,8 +115,6 @@ DEPENDENCIES
   rspec_junit_formatter (~> 0.2)
   rubycfn!
   simplecov (~> 0.9)
-  yard (~> 0.8)
-  yard-activesupport-concern (~> 0.0.1)
 
 BUNDLED WITH
    1.15.4
