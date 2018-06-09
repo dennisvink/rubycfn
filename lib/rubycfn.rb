@@ -108,11 +108,10 @@ module Rubycfn
       arguments[:amount].times do |i|
         res = {
           "#{name.to_s}#{i == 0 ? "" : i+1}": {
-            Properties: TOPLEVEL_BINDING.eval("@properties"),
             Type: arguments[:type]
           }
         }
-        res[name.to_sym][:DependsOn] = TOPLEVEL_BINDING.eval("@depends_on") unless TOPLEVEL_BINDING.eval("@depends_on").empty?
+        res[name.to_sym][:Properties] = TOPLEVEL_BINDING.eval("@properties") unless TOPLEVEL_BINDING.eval("@properties").empty?
         TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
       end
       TOPLEVEL_BINDING.eval("@depends_on = []")
