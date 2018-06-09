@@ -23,6 +23,23 @@ class String
     end
     return { "Fn::GetAtt": [ self, attr ] }
   end
+
+  def fnsplit(separator = "")
+    {
+      "Fn::Split": [
+        separator,
+        self
+      ]
+    }
+  end
+
+  def fnbase64
+    return { "Fn::Base64": self }
+  end
+
+  def fngetazs
+    return { "Fn::GetAZs": self }
+  end
 end
 
 class Array
@@ -30,6 +47,15 @@ class Array
     {
       "Fn::Join": [
         separator,
+        self
+      ]
+    }
+  end
+
+  def fnselect(index = 0)
+    {
+      "Fn::Select": [
+        index,
         self
       ]
     }
