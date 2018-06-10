@@ -12,7 +12,7 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.0.4"
+gem "rubycfn", "~> 0.0.5"
 
 ```
 
@@ -69,10 +69,6 @@ MyDemoStack = include DnsStack
 puts MyDemoStack.render_template
 
 ```
-
-I've deliberately added amount: 1 to the hosted_zone_ses resource. If you want
-multiple resources of the same type just increase the amount. The resource names
-will be enumerated, e.g. Resource, Resource2, Resource3, etc.
 
 The above code renders into this CloudFormation template:
 
@@ -150,6 +146,25 @@ The above code renders into this CloudFormation template:
     }
   }
 }
+```
+
+I've deliberately added amount: 1 to the hosted_zone_ses resources, which is not
+necessary as this defaults to 1 if you omit it. If you want multiple resources of
+the same type just increase the amount. The resource names will be enumerated,
+e.g. Resource, Resource2, Resource3, etc.
+
+With |r, index| you will be have to access the index number of the generated
+resource in the `index` variable.
+
+For example:
+
+```ruby
+      resource :my_s3_bucket,
+               amount: 10,
+               type: "AWS::S3::Bucket" do |r, index|
+
+        r.property(:name) { "MyAwesomeBucket#{index+1}" }
+      end
 ```
 
 ## Implemented AWS functions
