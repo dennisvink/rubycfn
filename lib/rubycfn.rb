@@ -11,6 +11,7 @@ require 'active_support/concern'
 @properties = {}
 @resources = {}
 @variables = {}
+@global_variables = {}
 
 # Monkey patching
 class String
@@ -86,8 +87,13 @@ module Rubycfn
 
   included do
     def self.method_missing(name, *args)
-      super unless TOPLEVEL_BINDING.eval("@variables[:#{name}]")
-      TOPLEVEL_BINDING.eval("@variables[:#{name}]")
+      super unless TOPLEVEL_BINDING.eval("@variables[:#{name}]") || \
+                   TOPLEVEL_BINDING.eval("@global_variables[:#{name}]")
+      if TOPLEVEL_BINDING.eval("@variables[:#{name}]")
+        TOPLEVEL_BINDING.eval("@variables[:#{name}]")
+      else
+        TOPLEVEL_BINDING.eval("@global_variables[:#{name}]")
+      end
     end
 
     def self.description(description)
@@ -129,6 +135,7 @@ module Rubycfn
       arguments[:default] ||= ""
       arguments[:value] ||= ""
       arguments[:required] ||= false
+      arguments[:global] ||= false
 
       if arguments[:value].empty?
         arguments[:value] = arguments[:default]
@@ -142,7 +149,12 @@ module Rubycfn
       res = {
         "#{name}": arguments[:value]
       }
-      TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
+      if arguments[:global] == false
+        TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
+      else
+        TOPLEVEL_BINDING.eval("@global_variables = @global_variables.deep_merge(#{res})")
+        TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
+      end
     end
 
     def self.depends_on(resources)
