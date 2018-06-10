@@ -4,11 +4,13 @@ require "json"
 require "rubycfn/version"
 require 'active_support/concern'
 
+@depends_on = [] 
+@description = ""
+@outputs = {}
 @parameters = {}
 @properties = {}
 @resources = {}
-@outputs = {}
-@depends_on = [] 
+@variables = {}
 
 # Monkey patching
 class String
@@ -83,6 +85,15 @@ module Rubycfn
   extend ActiveSupport::Concern
 
   included do
+    def self.method_missing(name, *args)
+      super unless TOPLEVEL_BINDING.eval("@variables[:#{name}]")
+      TOPLEVEL_BINDING.eval("@variables[:#{name}]")
+    end
+
+    def self.description(description)
+      TOPLEVEL_BINDING.eval("@description = '#{description}'")
+    end
+
     def self.parameter(name, arguments)
       name = name.to_s.cfnize
       arguments[:type] ||= "String"
@@ -114,27 +125,45 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@outputs = @outputs.deep_merge(#{res})")
     end
 
-    # attr_accessor :properties
+    def self.variable(name, arguments = {})
+      arguments[:default] ||= ""
+      arguments[:value] ||= ""
+      arguments[:required] ||= false
+
+      if arguments[:value].empty?
+        arguments[:value] = arguments[:default]
+        if arguments[:required]
+          if arguments[:value].empty?
+            raise "Property `#{name}` is required."
+          end
+        end
+      end
+
+      res = {
+        "#{name}": arguments[:value]
+      }
+      TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
+    end
+
+    def self.depends_on(resources)
+      case resources
+        when String
+          resources = [resources.cfnize]
+        when Array
+          resources = resources.map { |r| r.cfnize }
+      end
+      TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
+    end
+
+    def self.property(name, index = 0, &block)
+      name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
+      res = { "#{name}": yield(block) }
+      TOPLEVEL_BINDING.eval("@properties = @properties.deep_merge(#{res})")
+    end
+
     def self.resource(name, arguments, &block)
       arguments[:amount] ||= 1
       name = name.to_s.cfnize
-     
-      def self.depends_on(resources)
-        case resources
-          when String
-            resources = [resources.cfnize]
-          when Array
-            resources = resources.map { |r| r.cfnize }
-        end
-        TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
-      end
-
-      def self.property(name, index = 0, &block)
-        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
-        res = { "#{name}": yield(block) }
-        TOPLEVEL_BINDING.eval("@properties = @properties.deep_merge(#{res})")
-      end
-
       arguments[:amount].times do |i|
         yield self, i if block_given?
         res = {
@@ -158,11 +187,13 @@ module Rubycfn
     def self.render_template
       skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
       skeleton = JSON.parse(skeleton.to_json)
+      skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
       skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
       skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
       skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-      TOPLEVEL_BINDING.eval("@resources = @outputs = @properties = @parameters = {}")
+      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @parameters = {}")
       TOPLEVEL_BINDING.eval("@depends_on = []")
+      TOPLEVEL_BINDING.eval("@description = ''")
       JSON.pretty_generate(skeleton.recursive_compact)
     end
   end
