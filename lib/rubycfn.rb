@@ -68,6 +68,12 @@ class ::Hash
     self.merge(second.to_h, &merger)
   end
 
+  def recursive_compact
+    delete_if do |k, v|
+      (v.respond_to?(:empty?) ? v.empty? : !v) or v.instance_of?(Hash) && v.recursive_compact.empty?
+    end
+  end
+
   def compact
     delete_if { |k, v| v.nil? }
   end
@@ -123,21 +129,20 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
       end
 
-      def self.property(name, &block)
+      def self.property(name, index = 0, &block)
         name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
         res = { "#{name}": yield(block) }
         TOPLEVEL_BINDING.eval("@properties = @properties.deep_merge(#{res})")
       end
 
-      yield self if block_given?
-
       arguments[:amount].times do |i|
+        yield self, i if block_given?
         res = {
           "#{name.to_s}#{i == 0 ? "" : i+1}": {
+            Properties: TOPLEVEL_BINDING.eval("@properties"),
             Type: arguments[:type]
           }
         }
-        res[name.to_sym][:Properties] = TOPLEVEL_BINDING.eval("@properties") unless TOPLEVEL_BINDING.eval("@properties").empty?
         TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
       end
       TOPLEVEL_BINDING.eval("@depends_on = []")
@@ -153,16 +158,12 @@ module Rubycfn
     def self.render_template
       skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
       skeleton = JSON.parse(skeleton.to_json)
-      unless TOPLEVEL_BINDING.eval("@parameters").empty?
-        skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
-      end
+      skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
       skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
-      unless TOPLEVEL_BINDING.eval("@outputs").empty?
-        skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-      end
+      skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
       TOPLEVEL_BINDING.eval("@resources = @outputs = @properties = @parameters = {}")
       TOPLEVEL_BINDING.eval("@depends_on = []")
-      JSON.pretty_generate(skeleton)
+      JSON.pretty_generate(skeleton.recursive_compact)
     end
   end
 end
