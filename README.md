@@ -12,9 +12,13 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.0.7"
+gem "rubycfn", "~> 0.0.8"
 
 ```
+
+## Example code
+
+You can find stack examples at [https://github.com/dennisvink/rubycfn-example](https://github.com/dennisvink/rubycfn-example/)
 
 ## Running specs
 
