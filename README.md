@@ -12,7 +12,7 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.0.5"
+gem "rubycfn", "~> 0.0.7"
 
 ```
 
@@ -173,6 +173,10 @@ You can Ref by postpending the .ref method to any string. E.g. "string".ref
 If you supply an argument to .ref it'll be rendered as Fn::GetAtt. Last but
 not least, calling Fn::Join is achieved by postpending .fnjoin to an array.
 You can provide it with an argument for the separator. By default its "".
+
+You can use the following methods in the same fashion:
+
+fnsplit, fnbase64, fnjoin and fnselect 
 
 ## Outputting to YAML
 
