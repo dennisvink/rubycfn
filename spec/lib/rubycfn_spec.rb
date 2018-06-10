@@ -15,6 +15,7 @@ describe Rubycfn do
 
     it { should_not have_key 'Parameters' }
     it { should_not have_key 'Outputs' }
-    it { should have_key 'Resources' }
+    it { should_not have_key 'Resources' }
+    it { should have_key 'AWSTemplateFormatVersion' }
   end
 end
