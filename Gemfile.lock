@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubycfn (0.0.7)
+    rubycfn (0.0.8)
       activesupport (~> 5.1.5)
       json (~> 2.1.0)
       neatjson (~> 0.8.4)
