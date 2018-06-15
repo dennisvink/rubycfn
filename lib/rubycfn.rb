@@ -96,8 +96,10 @@ module Rubycfn
       end
     end
 
-    def self.description(description)
-      TOPLEVEL_BINDING.eval("@description = '#{description}'")
+    def self.description(description = "")
+      unless description.nil?
+        TOPLEVEL_BINDING.eval("@description = '#{description}'")
+      end
     end
 
     def self.parameter(name, arguments)
@@ -180,6 +182,7 @@ module Rubycfn
         yield self, i if block_given?
         res = {
           "#{name.to_s}#{i == 0 ? "" : i+1}": {
+            DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
             Properties: TOPLEVEL_BINDING.eval("@properties"),
             Type: arguments[:type]
           }
