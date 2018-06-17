@@ -50,6 +50,12 @@ class String
     end
     return { "Fn::Sub": [ self, variable_map ] }
   end
+
+  def fnimportvalue
+    return { "Fn::Import": self }
+  end
+  alias_method :fnimport, :fnimportvalue
+
 end
 
 class Array
