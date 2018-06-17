@@ -43,6 +43,13 @@ class String
   def fngetazs
     return { "Fn::GetAZs": self }
   end
+
+  def fnsub(variable_map = nil)
+    unless variable_map
+      return { "Fn::Sub": self }
+    end
+    return { "Fn::Sub": [ self, variable_map ] }
+  end
 end
 
 class Array
