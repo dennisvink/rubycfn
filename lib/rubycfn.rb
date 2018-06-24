@@ -182,6 +182,13 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
     end
 
+    def self.set(name, index = 0, &block)
+      res = {
+        "#{name}": yield
+      }
+      TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
+    end
+
     def self.property(name, index = 0, &block)
       name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
       res = { "#{name}": yield(block) }
@@ -192,15 +199,20 @@ module Rubycfn
       arguments[:amount] ||= 1
       name = name.to_s.cfnize
       arguments[:amount].times do |i|
-        yield self, i if block_given?
-        res = {
-          "#{name.to_s}#{i == 0 ? "" : i+1}": {
-            DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
-            Properties: TOPLEVEL_BINDING.eval("@properties"),
-            Type: arguments[:type]
+        resource_suffix = i == 0 ? "" : "#{i+1}"
+        if arguments[:type].class == Module
+          send("include", arguments[:type][name, resource_suffix, &block])
+        else
+          yield self, i if block_given?
+          res = {
+            "#{name.to_s}#{i == 0 ? "" : i+1}": {
+              DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
+              Properties: TOPLEVEL_BINDING.eval("@properties"),
+              Type: arguments[:type]
+            }
           }
-        }
-        TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
+          TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
+        end
       end
       TOPLEVEL_BINDING.eval("@depends_on = []")
       TOPLEVEL_BINDING.eval("@properties = {}")
