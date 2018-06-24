@@ -12,7 +12,7 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.0.11"
+gem "rubycfn", "~> 0.1.0"
 
 ```
 
