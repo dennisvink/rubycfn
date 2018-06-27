@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require "erb"
+require "tty-prompt"
+require 'ostruct'
+
+prompt = TTY::Prompt.new
+
+#choices = [
+#  "VPC",
+#  "RDS",
+#  "ECS Cluster",
+#  "AutoScaling Group",
+#]
+#
+#result = prompt.enum_select("Select an editor?", choices)
+#
+#puts "---"
+#puts result.inspect
+#
+
+def render(file, vars)
+  template = File.read("../templates/#{file}.erb")
+  ERB.new(template).result(OpenStruct.new(vars).instance_eval { binding })
+end
+
+puts "__________ ____ __________________.___._________ _____________________ "
+puts "\\______   \\    |   \\______   \\__  |   |\\_   ___ \\\\_   _____/\\______   \\"
+puts " |       _/    |   /|    |  _//   |   |/    \\  \\/ |    __)   |    |  _/"
+puts " |    |   \\    |  / |    |   \\\\____   |\\     \\____|     \\    |    |   \\"
+puts " |____|_  /______/  |______  // ______| \\______  /\\___  /    |______  /"
+puts "        \\/                 \\/ \\/               \\/     \\/            \\/ "
+
+@project_name = prompt.ask('Project name?', default: 'example') do |q|
+  q.validate(/^([a-z0-9]*)$/, 'Invalid project name')
+end + '-rubycfn'
+
+puts render('.env', {
+  :project_name => @project_name          
+})
+
