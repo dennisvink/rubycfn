@@ -21,7 +21,7 @@ prompt = TTY::Prompt.new
 #
 
 def render(file, vars)
-  template = File.read("#{@path}/../templates/#{file}.erb")
+  template = File.read("#{@path}/templates/#{file}.erb")
   ERB.new(template).result(OpenStruct.new(vars).instance_eval { binding })
 end
 
