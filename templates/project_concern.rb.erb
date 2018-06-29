@@ -1,0 +1,42 @@
+module <%= name %>Stack
+  module Main
+    extend ActiveSupport::Concern
+
+    included do
+      # Example stack parameter
+      #parameter :example_stack_parameter_name,
+      #          default: "example_value"
+
+      # Example variable
+      variable :example_variable,
+               required: false,
+               value: ENV["SOME_ENV_VAR"],
+               default: "default_value"
+
+      # Example resource, custom name
+      resource :my_example_s3_bucket,
+               type: "AWS::S3::Bucket" do |r|
+        #r.depends_on "SomeLogicalResourceName"
+        r.property(:name) { example_variable }
+      end
+
+      # Example resource, dynamically generated name
+      resource :my_example_s3_bucket,
+               type: "AWS::S3::Bucket"
+
+      # Multiple resources of the same type
+      resource :my_sqs_queue,
+               amount: 3,
+               type: "AWS::SQS::Queue"
+
+      queue_names = %w(MyFirstQueue MySecondQueue)
+
+      # Multiple resources with index, starts at 0
+      resource :sqs_with_index,
+               amount: 2,
+               type: "AWS::SQS::Queue" do |r, index|
+         r.property(:queue_name) { queue_names[index] }
+      end
+    end
+  end
+end
