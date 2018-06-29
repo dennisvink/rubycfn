@@ -16,6 +16,10 @@ gem "rubycfn", "~> 0.1.1"
 
 ```
 
+## Starting a new project
+
+Typing `rubycfn` at the prompt and answering its questions generates a new sample project.
+
 ## Example code
 
 You can find stack examples at [https://github.com/dennisvink/rubycfn-example](https://github.com/dennisvink/rubycfn-example/)
