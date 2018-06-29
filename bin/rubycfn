@@ -1,42 +1,59 @@
 #!/usr/bin/env ruby
 
 require "erb"
-require "tty-prompt"
+require 'fileutils'
 require 'ostruct'
+require "tty-prompt"
+require "rubycfn/version"
 
+require_relative "../lib/cli_methods"
+
+path = File.expand_path(File.dirname(File.dirname(__FILE__)))
+puts rubycfn_banner(Rubycfn::VERSION)
 prompt = TTY::Prompt.new
-@path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 
-#choices = [
-#  "VPC",
-#  "RDS",
-#  "ECS Cluster",
-#  "AutoScaling Group",
-#]
-#
-#result = prompt.enum_select("Select an editor?", choices)
-#
-#puts "---"
-#puts result.inspect
-#
-
-def render(file, vars)
-  template = File.read("#{@path}/templates/#{file}.erb")
-  ERB.new(template).result(OpenStruct.new(vars).instance_eval { binding })
+project_name = prompt.ask('Project name?', default: 'example') do |q|
+  q.validate(/^([a-z0-9]*)$/, 'Invalid project name')
 end
 
-puts "__________ ____ __________________.___._________ _____________________ "
-puts "\\______   \\    |   \\______   \\__  |   |\\_   ___ \\\\_   _____/\\______   \\"
-puts " |       _/    |   /|    |  _//   |   |/    \\  \\/ |    __)   |    |  _/"
-puts " |    |   \\    |  / |    |   \\\\____   |\\     \\____|     \\    |    |   \\"
-puts " |____|_  /______/  |______  // ______| \\______  /\\___  /    |______  /"
-puts "        \\/                 \\/ \\/               \\/     \\/            \\/ "
+project_path = project_name + '-rubycfn'
 
-@project_name = prompt.ask('Project name?', default: 'example') do |q|
-  q.validate(/^([a-z0-9]*)$/, 'Invalid project name')
-end + '-rubycfn'
+account_id = prompt.ask('AWS Account ID?', default: '1234567890') do |q|
+  q.validate(/^([0-9]*)$/, 'Invalid account id')
+end
 
-puts render('.env', {
-  :project_name => @project_name          
-})
+region = prompt.select(
+  "Select AWS region", aws_regions
+)
+
+dotenv = render('.env', {
+  :project_name => project_name,
+  :account_id => account_id,
+  :region => region
+}, path)
+
+dotenv_test = render('.env.test', {}, path)
+gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
+rakefile = render('Rakefile', {}, path)
+main = render('main.rb', {}, path)
+compile = render('compile.rb', {}, path)
+global_variables = render('global_variables.rb', {}, path)
+project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
+project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
+
+# Create directory structure
+FileUtils.mkdir_p project_path + '/lib/stacks/' + project_name + '_stack'
+rubycfn_structure(project_path).each do |dir|
+  FileUtils.mkdir_p dir
+end
+
+File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
+File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
+File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
+File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
+File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
+File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
+File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |file| file.write(global_variables) }
+File.open("#{project_path}/lib/stacks/#{project_name}_stack.rb", 'w') { |file| file.write(project_stack) }
+File.open("#{project_path}/lib/stacks/#{project_name}_stack/example.rb", 'w') { |file| file.write(project_concern) }
 
