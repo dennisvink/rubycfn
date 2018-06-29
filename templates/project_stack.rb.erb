@@ -1,0 +1,8 @@
+module <%= name %>Stack
+  extend ActiveSupport::Concern
+  include Rubycfn
+
+  included do
+    include <%= name %>Stack::Main
+  end
+end
