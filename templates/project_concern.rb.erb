@@ -35,7 +35,7 @@ module <%= name %>Stack
       resource :sqs_with_index,
                amount: 2,
                type: "AWS::SQS::Queue" do |r, index|
-         r.queue_name { queue_names[index] }
+         r.property(:queue_name) { queue_names[index] }
       end
     end
   end
