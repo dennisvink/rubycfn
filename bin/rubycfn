@@ -32,7 +32,7 @@ dotenv = render('.env', {
   :region => region
 }, path)
 
-dotenv_test = render('.env.test', {}, path)
+dotenv_test = render('.env.test', { project_name: project_name }, path)
 gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
 rakefile = render('Rakefile', {}, path)
 main = render('main.rb', {}, path)
