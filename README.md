@@ -12,9 +12,13 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.1.0"
+gem "rubycfn", "~> 0.1.1"
 
 ```
+
+## Starting a new project
+
+Typing `rubycfn` at the prompt and answering its questions generates a new sample project.
 
 ## Example code
 
