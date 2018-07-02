@@ -2,6 +2,7 @@
 require "neatjson"
 require "json"
 require "rubycfn/version"
+require "compound/resources"
 require 'active_support/concern'
 
 @depends_on = [] 
@@ -59,6 +60,13 @@ class String
 end
 
 class Array
+  def fncidr
+    {
+      "Fn::Cidr": self
+    }
+  end
+  alias_method :cidr, :fncidr
+
   def fnjoin(separator = "")
     {
       "Fn::Join": [
@@ -92,6 +100,15 @@ class ::Hash
 
   def compact
     delete_if { |k, v| v.nil? }
+  end
+
+  def fnselect(index = 0)
+    {
+      "Fn::Select": [
+        index,
+        self
+      ]
+    }
   end
 end
 
@@ -151,6 +168,7 @@ module Rubycfn
       arguments[:value] ||= ""
       arguments[:required] ||= false
       arguments[:global] ||= false
+      arguments[:filter] ||= nil
 
       if arguments[:value].empty?
         arguments[:value] = arguments[:default]
@@ -159,6 +177,10 @@ module Rubycfn
             raise "Property `#{name}` is required."
           end
         end
+      end
+
+      if arguments[:filter]
+        arguments[:value] = self.send(arguments[:filter], arguments[:value])
       end
 
       res = {
