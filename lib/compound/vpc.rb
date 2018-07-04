@@ -21,12 +21,13 @@ module RubyCfn
                    default: true
           variable :instance_tenancy,
                    filter: :validate_instance_tenancy
-          variable :ipv6,
-                   default: false
-          variable :subnets,
-                   default: 3
-          variable :subnet_ip_addresses,
-                   default: 256
+          # TODO: Move to separate compound resource
+          # variable :ipv6,
+          #          default: false
+          # variable :subnets,
+          #          default: 3
+          # variable :subnet_ip_addresses,
+          #          default: 256
 
           yield self if block_given? # Variable overrides
 
@@ -38,19 +39,41 @@ module RubyCfn
             r.property(:instance_tenancy) { instance_tenancy } unless instance_tenancy.empty?
           end
 
-          subnets.times do |i|
-            resource "#{prefix}_subnet#{suffix}#{i == 0 ? "" : i+1}",
-                     type: "AWS::EC2::Subnet",
-                     compound: true do |r, index|
-              r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
-              r.property(:cidr_block) { [cidr_block, subnets.to_s, ((Math.log(subnet_ip_addresses)/Math.log(2)).floor).to_s].fncidr.fnselect(i) }
-              #if ipv6 == "true"
-              #  r.property(:ipv6_cidr_block) do
-              #    .. todo ..
-              #  end
-              #end
-            end
+          resource "#{prefix}_internet_gateway#{suffix}",
+                   type: "AWS::EC2::InternetGateway"
+
+          resource "#{prefix}_route#{suffix}",
+                   type: "AWS::EC2::Route" do |r, index|
+            r.property(:destination_cidr_block) { "0.0.0.0/0" }
+            r.property(:gateway_id) { "#{prefix}_internet_gateway#{suffix}".cfnize.ref }
+            r.property(:route_table_id) { "#{prefix}_route_table#{suffix}".cfnize.ref }
           end
+
+          resource "#{prefix}_route_table#{suffix}",
+                   type: "AWS::EC2::RouteTable" do |r, index|
+            r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
+          end
+
+          resource "#{prefix}_vpc_gateway_attachment#{suffix}",
+                   type: "AWS::EC2::VPCGatewayAttachment" do |r, index|
+            r.property(:internet_gateway_id) { "#{prefix}_internet_gateway#{suffix}".cfnize.ref }
+            r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
+          end
+
+          # TODO: Move to separate compound resource
+          #subnets.times do |i|
+          #  resource "#{prefix}_subnet#{suffix}#{i == 0 ? "" : i+1}",
+          #           type: "AWS::EC2::Subnet",
+          #           compound: true do |r, index|
+          #    r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
+          #    r.property(:cidr_block) { ["#{prefix}_vpc#{suffix}".cfnize.ref("CidrBlock"), subnets.to_s, ((Math.log(subnet_ip_addresses)/Math.log(2)).floor).to_s].fncidr.fnselect(i) }
+          #    #if ipv6 == "true"
+          #    #  r.property(:ipv6_cidr_block) do
+          #    #    .. todo ..
+          #    #  end
+          #    #end
+          #  end
+          #end
 
           if ipv6 == "true"
             resource "#{prefix}_ipv6_cidr_block#{suffix}",
