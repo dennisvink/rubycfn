@@ -68,6 +68,15 @@ class Array
   end
   alias_method :cidr, :fncidr
 
+  def fnfindinmap(name = nil)
+    self.unshift(name.cfnize) if name
+    {
+      "Fn::FindInMap": self
+    }
+  end
+  alias_method :find_in_map, :fnfindinmap
+  alias_method :findinmap, :fnfindinmap
+
   def fnjoin(separator = "")
     {
       "Fn::Join": [
