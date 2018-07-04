@@ -20,6 +20,24 @@ module <%= name %>Stack
         r.property(:name) { example_variable }
       end
 
+      # Example VPC, creates VPC, IGW, Route, and VPCGatewayAttachment
+      # Settable variables:
+      # - cidr_block (defaults to 10.0.0.0/16)
+      # - enable_dns_support (boolean, default true)
+      # - enable_dns_hostnames (boolean, default true)
+      # - instance_tenancy (`default` or `dedicated`) 
+      resource :my_first,
+               type: RubyCfn::VPC do |r|
+        r.set(:cidr_block) { "10.1.0.0/16" }
+      end
+          variable :cidr_block,
+                   default: "10.0.0.0/16"
+          variable :enable_dns_support,
+                   default: true
+          variable :enable_dns_hostnames,
+                   default: true
+          variable :instance_tenancy,
+                   filter: :validate_instance_tenancy
       # Example resource, dynamically generated name
       resource :my_example_s3_bucket,
                type: "AWS::S3::Bucket"

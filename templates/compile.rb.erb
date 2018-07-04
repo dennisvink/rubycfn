@@ -11,6 +11,6 @@ Module.constants.select do |mod|
 end
 
 stacks.each do |stack_name, stack|
-  puts "- Saved #{stack_name} to build/#{stack_name.downcase}.json"
-  File.open("build/#{stack_name.downcase}.json", "w") { |f| f.write(stack) }
+  puts "- Saved #{stack_name} to build/#{ENV["ENVIRONMENT"]}-#{stack_name.downcase}.json"
+  File.open("build/#{ENV["ENVIRONMENT"]}-#{stack_name.downcase}.json", "w") { |f| f.write(stack) }
 end
