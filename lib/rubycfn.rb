@@ -2,6 +2,7 @@
 require "neatjson"
 require "json"
 require "rubycfn/version"
+require "compound/resources"
 require 'active_support/concern'
 
 @depends_on = [] 
@@ -9,6 +10,7 @@ require 'active_support/concern'
 @outputs = {}
 @parameters = {}
 @properties = {}
+@mappings = {}
 @resources = {}
 @variables = {}
 @global_variables = {}
@@ -59,6 +61,22 @@ class String
 end
 
 class Array
+  def fncidr
+    {
+      "Fn::Cidr": self
+    }
+  end
+  alias_method :cidr, :fncidr
+
+  def fnfindinmap(name = nil)
+    self.unshift(name.cfnize) if name
+    {
+      "Fn::FindInMap": self
+    }
+  end
+  alias_method :find_in_map, :fnfindinmap
+  alias_method :findinmap, :fnfindinmap
+
   def fnjoin(separator = "")
     {
       "Fn::Join": [
@@ -93,6 +111,15 @@ class ::Hash
   def compact
     delete_if { |k, v| v.nil? }
   end
+
+  def fnselect(index = 0)
+    {
+      "Fn::Select": [
+        index,
+        self
+      ]
+    }
+  end
 end
 
 module Rubycfn
@@ -113,6 +140,24 @@ module Rubycfn
       unless description.nil?
         TOPLEVEL_BINDING.eval("@description = '#{description}'")
       end
+    end
+
+    def self.mapping(name, arguments = {})
+      raise "`name` is required for mapping." unless arguments[:name]
+      unless arguments[:data]
+        %w(key value).each do |k|
+          raise "`#{k}` is required for mapping, unless a `data` hash is passed." unless arguments[k.to_sym]
+        end
+      end
+
+      name = name.to_s.cfnize
+      kv_pairs = arguments[:data] ? arguments[:data] : { "#{arguments[:key]}": "#{arguments[:value]}" }
+      res = {
+        "#{name}": {
+          "#{arguments[:name]}": kv_pairs
+        }
+      } 
+      TOPLEVEL_BINDING.eval("@mappings = @mappings.deep_merge(#{res})")
     end
 
     def self.parameter(name, arguments)
@@ -151,6 +196,7 @@ module Rubycfn
       arguments[:value] ||= ""
       arguments[:required] ||= false
       arguments[:global] ||= false
+      arguments[:filter] ||= nil
 
       if arguments[:value].empty?
         arguments[:value] = arguments[:default]
@@ -159,6 +205,10 @@ module Rubycfn
             raise "Property `#{name}` is required."
           end
         end
+      end
+
+      if arguments[:filter]
+        arguments[:value] = self.send(arguments[:filter], arguments[:value])
       end
 
       res = {
@@ -197,11 +247,12 @@ module Rubycfn
 
     def self.resource(name, arguments, &block)
       arguments[:amount] ||= 1
+      origname = name.to_s
       name = name.to_s.cfnize
       arguments[:amount].times do |i|
         resource_suffix = i == 0 ? "" : "#{i+1}"
         if arguments[:type].class == Module
-          send("include", arguments[:type][name, resource_suffix, &block])
+          send("include", arguments[:type][origname, resource_suffix, &block])
         else
           yield self, i if block_given?
           res = {
@@ -228,10 +279,11 @@ module Rubycfn
       skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
       skeleton = JSON.parse(skeleton.to_json)
       skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
+      skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
       skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
       skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
       skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @parameters = {}")
+      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @mappings = @parameters = {}")
       TOPLEVEL_BINDING.eval("@depends_on = []")
       TOPLEVEL_BINDING.eval("@description = ''")
       JSON.pretty_generate(skeleton.recursive_compact)
