@@ -10,6 +10,7 @@ require 'active_support/concern'
 @outputs = {}
 @parameters = {}
 @properties = {}
+@mappings = {}
 @resources = {}
 @variables = {}
 @global_variables = {}
@@ -132,6 +133,24 @@ module Rubycfn
       end
     end
 
+    def self.mapping(name, arguments = {})
+      raise "`name` is required for mapping." unless arguments[:name]
+      unless arguments[:data]
+        %w(key value).each do |k|
+          raise "`#{k}` is required for mapping, unless a `data` hash is passed." unless arguments[k.to_sym]
+        end
+      end
+
+      name = name.to_s.cfnize
+      kv_pairs = arguments[:data] ? arguments[:data] : { "#{arguments[:key]}": "#{arguments[:value]}" }
+      res = {
+        "#{name}": {
+          "#{arguments[:name]}": kv_pairs
+        }
+      } 
+      TOPLEVEL_BINDING.eval("@mappings = @mappings.deep_merge(#{res})")
+    end
+
     def self.parameter(name, arguments)
       name = name.to_s.cfnize
       arguments[:type] ||= "String"
@@ -250,10 +269,11 @@ module Rubycfn
       skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
       skeleton = JSON.parse(skeleton.to_json)
       skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
+      skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
       skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
       skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
       skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @parameters = {}")
+      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @mappings = @parameters = {}")
       TOPLEVEL_BINDING.eval("@depends_on = []")
       TOPLEVEL_BINDING.eval("@description = ''")
       JSON.pretty_generate(skeleton.recursive_compact)
