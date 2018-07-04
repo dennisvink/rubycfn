@@ -17,7 +17,7 @@ module <%= name %>Stack
       resource :my_example_s3_bucket,
                type: "AWS::S3::Bucket" do |r|
         #r.depends_on "SomeLogicalResourceName"
-        r.property(:name) { example_variable }
+        r.property(:bucket_name) { example_variable }
       end
 
       # Example VPC, creates VPC, IGW, Route, and VPCGatewayAttachment
