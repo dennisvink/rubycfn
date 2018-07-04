@@ -247,11 +247,12 @@ module Rubycfn
 
     def self.resource(name, arguments, &block)
       arguments[:amount] ||= 1
+      origname = name.to_s
       name = name.to_s.cfnize
       arguments[:amount].times do |i|
         resource_suffix = i == 0 ? "" : "#{i+1}"
         if arguments[:type].class == Module
-          send("include", arguments[:type][name, resource_suffix, &block])
+          send("include", arguments[:type][origname, resource_suffix, &block])
         else
           yield self, i if block_given?
           res = {
