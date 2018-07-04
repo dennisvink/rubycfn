@@ -75,13 +75,13 @@ module RubyCfn
           #  end
           #end
 
-          if ipv6 == "true"
-            resource "#{prefix}_ipv6_cidr_block#{suffix}",
-                     type: "AWS::EC2::VPCCidrBlock" do |r, index|
-              r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
-              r.property(:amazon_provided_ipv6_cidr_block) { true }
-            end
-          end
+          #if ipv6 == "true"
+          #  resource "#{prefix}_ipv6_cidr_block#{suffix}",
+          #           type: "AWS::EC2::VPCCidrBlock" do |r, index|
+          #    r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
+          #    r.property(:amazon_provided_ipv6_cidr_block) { true }
+          #  end
+          #end
         end
       end
     end
