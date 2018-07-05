@@ -1,9 +1,10 @@
 # Rubycfn RubyCFN is a light-weight CloudFormation DSL
-require "neatjson"
-require "json"
-require "rubycfn/version"
-require "compound/resources"
 require 'active_support/concern'
+require "compound/resources"
+require "json"
+require "neatjson"
+require "rubycfn/version"
+#require "tasks/tasks"
 
 @depends_on = [] 
 @description = ""
@@ -12,6 +13,7 @@ require 'active_support/concern'
 @properties = {}
 @mappings = {}
 @resources = {}
+@resource_name = ""
 @variables = {}
 @global_variables = {}
 
@@ -232,6 +234,10 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
     end
 
+    def self._id(name)
+      TOPLEVEL_BINDING.eval("@resource_name = '#{name}'")
+    end
+
     def self.set(name, index = 0, &block)
       res = {
         "#{name}": yield
@@ -255,8 +261,15 @@ module Rubycfn
           send("include", arguments[:type][origname, resource_suffix, &block])
         else
           yield self, i if block_given?
+
+          resource_postpend = TOPLEVEL_BINDING.eval("@resource_name").empty? ? i+1 : ""
+          unless TOPLEVEL_BINDING.eval("@resource_name").empty?
+            name = TOPLEVEL_BINDING.eval("@resource_name")
+            TOPLEVEL_BINDING.eval("@resource_name = ''")
+          end
+
           res = {
-            "#{name.to_s}#{i == 0 ? "" : i+1}": {
+            "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
               DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
               Type: arguments[:type]
