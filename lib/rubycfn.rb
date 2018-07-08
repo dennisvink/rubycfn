@@ -277,9 +277,9 @@ module Rubycfn
           }
           TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
         end
+        TOPLEVEL_BINDING.eval("@depends_on = []")
+        TOPLEVEL_BINDING.eval("@properties = {}")
       end
-      TOPLEVEL_BINDING.eval("@depends_on = []")
-      TOPLEVEL_BINDING.eval("@properties = {}")
     end
 
     def self.sort_json(obj)
