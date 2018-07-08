@@ -2,7 +2,10 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.1.5 (Next Release)
+## 0.1.6 (Next Release)
+
+## 0.1.5
+  * Fixed bug where properties were not reset when amount was greater than 1 -- [@dennisvink][@dennisvink]
 
 ## 0.1.4 
   * Made resource names overridable from within resource block with `_id` resource method. -- [@dennisvink][@dennisvink]
