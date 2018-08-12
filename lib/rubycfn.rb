@@ -106,6 +106,7 @@ class ::Hash
 
   def recursive_compact
     delete_if do |k, v|
+      next if v === false
       (v.respond_to?(:empty?) ? v.empty? : !v) or v.instance_of?(Hash) && v.recursive_compact.empty?
     end
   end
@@ -130,7 +131,9 @@ module Rubycfn
   included do
     def self.method_missing(name, *args)
       super unless TOPLEVEL_BINDING.eval("@variables[:#{name}]") || \
-                   TOPLEVEL_BINDING.eval("@global_variables[:#{name}]")
+                   TOPLEVEL_BINDING.eval("@variables[:#{name}] === false") ||
+                   TOPLEVEL_BINDING.eval("@global_variables[:#{name}]") ||
+                   TOPLEVEL_BINDING.eval("@global_variables[:#{name}] === false")
       if TOPLEVEL_BINDING.eval("@variables[:#{name}]")
         TOPLEVEL_BINDING.eval("@variables[:#{name}]")
       else
@@ -158,7 +161,7 @@ module Rubycfn
         "#{name}": {
           "#{arguments[:name]}": kv_pairs
         }
-      } 
+      }
       TOPLEVEL_BINDING.eval("@mappings = @mappings.deep_merge(#{res})")
     end
 
