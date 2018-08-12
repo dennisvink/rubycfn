@@ -21,6 +21,7 @@ module RubyCfn
                    default: true
           variable :instance_tenancy,
                    filter: :validate_instance_tenancy
+
           # TODO: Move to separate compound resource
           # variable :ipv6,
           #          default: false
