@@ -7,11 +7,20 @@ module <%= name %>Stack
       #parameter :example_stack_parameter_name,
       #          default: "example_value"
 
-      # Example variable
+      # Example variables
       variable :example_variable,
                required: false,
                value: ENV["SOME_ENV_VAR"],
                default: "default_value"
+
+      variable :cidr_block,
+               default: "10.0.0.0/16"
+      variable :enable_dns_support,
+               default: true
+      variable :enable_dns_hostnames,
+               default: true
+      variable :instance_tenancy,
+               filter: :validate_instance_tenancy
 
       # Example resource, custom name
       resource :my_example_s3_bucket,
@@ -30,14 +39,7 @@ module <%= name %>Stack
                type: RubyCfn::VPC do |r|
         r.set(:cidr_block) { "10.1.0.0/16" }
       end
-          variable :cidr_block,
-                   default: "10.0.0.0/16"
-          variable :enable_dns_support,
-                   default: true
-          variable :enable_dns_hostnames,
-                   default: true
-          variable :instance_tenancy,
-                   filter: :validate_instance_tenancy
+
       # Example resource, dynamically generated name
       resource :my_example_s3_bucket,
                type: "AWS::S3::Bucket"
