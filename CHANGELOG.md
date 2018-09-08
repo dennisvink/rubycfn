@@ -2,7 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.1.7 (Next Release)
+## 0.1.8 (Next Release)
+
+## 0.1.7
+  * Added specs to default project -- [@dennisvink][@dennisvink]
+  * Added CI/CD pipeline to default project -- [@dennisvink][@dennisvink]
+  * Removed missing method from default project -- [@dennisvink][@dennisvink]
 
 ## 0.1.6
   * Fixed bug where variables that were passed a `false` (boolean) value invoked super -- [@dennisvink][@dennisvink]
