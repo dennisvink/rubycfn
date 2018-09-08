@@ -2,7 +2,10 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.1.8 (Next Release)
+## 0.1.9 (Next Release)
+
+## 0.1.8
+  * `Export` in outputs now takes both strings and hashes
 
 ## 0.1.7
   * Added specs to default project -- [@dennisvink][@dennisvink]
