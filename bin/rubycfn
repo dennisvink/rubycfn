@@ -32,14 +32,18 @@ dotenv = render('.env', {
   :region => region
 }, path)
 
-dotenv_test = render('.env.test', { project_name: project_name }, path)
-gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
-rakefile = render('Rakefile', {}, path)
-main = render('main.rb', {}, path)
+buildspec = render('buildspec.yml', {}, path)
+cicd = render('cicd.rb', { name: project_name.capitalize, small_name: project_name }, path)
 compile = render('compile.rb', {}, path)
+dotenv_test = render('.env.test', { project_name: project_name }, path)
+example_spec = render('example_stack_spec.rb', { name: project_name.capitalize }, path)
+gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
 global_variables = render('global_variables.rb', {}, path)
-project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
+main = render('main.rb', {}, path)
 project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
+project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
+rakefile = render('Rakefile', {}, path)
+spec_helper = render('spec_helper.rb', {}, path)
 
 # Create directory structure
 FileUtils.mkdir_p project_path + '/lib/stacks/' + project_name + '_stack'
@@ -51,9 +55,13 @@ File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
 File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
 File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
 File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
+File.open("#{project_path}/config/buildspec.yml", 'w') { |file| file.write(buildspec) }
 File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
 File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
 File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |file| file.write(global_variables) }
 File.open("#{project_path}/lib/stacks/#{project_name}_stack.rb", 'w') { |file| file.write(project_stack) }
 File.open("#{project_path}/lib/stacks/#{project_name}_stack/example.rb", 'w') { |file| file.write(project_concern) }
+File.open("#{project_path}/lib/stacks/#{project_name}_stack/cicd.rb", 'w') { |file| file.write(cicd) }
+File.open("#{project_path}/spec/spec_helper.rb", 'w') { |file| file.write(spec_helper) }
+File.open("#{project_path}/spec/lib/#{project_name}_spec.rb", 'w') { |file| file.write(example_spec) }
 
