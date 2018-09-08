@@ -19,8 +19,6 @@ module <%= name %>Stack
                default: true
       variable :enable_dns_hostnames,
                default: true
-      variable :instance_tenancy,
-               filter: :validate_instance_tenancy
 
       # Example resource, custom name
       resource :my_example_s3_bucket,
