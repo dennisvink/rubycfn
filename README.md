@@ -31,7 +31,7 @@ Type `bundle install` to install all dependencies that are listed in the Gemfile
 ## Running specs
 
 Type `rake` to run the tests. It tests if RubyCfn creates a valid
-CloudFormation stack. 
+CloudFormation stack.
 
 ## Example usage
 
