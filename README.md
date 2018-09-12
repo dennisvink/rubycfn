@@ -24,10 +24,14 @@ Typing `rubycfn` at the prompt and answering its questions generates a new sampl
 
 You can find stack examples at [https://github.com/dennisvink/rubycfn-example](https://github.com/dennisvink/rubycfn-example/)
 
+## Installing Gems
+
+Type `bundle install` to install all dependencies that are listed in the Gemfile.
+
 ## Running specs
 
 Type `rake` to run the tests. It tests if RubyCfn creates a valid
-CloudFormation stack.
+CloudFormation stack. 
 
 ## Example usage
 
