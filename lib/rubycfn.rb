@@ -106,7 +106,7 @@ class ::Hash
 
   def recursive_compact
     delete_if do |k, v|
-      next if v === false
+      next if v === false || k =~ /Fn\:/
       (v.respond_to?(:empty?) ? v.empty? : !v) or v.instance_of?(Hash) && v.recursive_compact.empty?
     end
   end
