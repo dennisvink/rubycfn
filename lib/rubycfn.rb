@@ -184,6 +184,11 @@ module Rubycfn
 
     def self.output(name, arguments)
       name = name.to_s.cfnize
+      if arguments[:export]
+        unless arguments[:export].respond_to?("each")
+          arguments[:export] = { "Name": arguments[:export] }
+        end
+      end
       param = {
         "Description": arguments[:description],
         "Value": arguments[:value],
