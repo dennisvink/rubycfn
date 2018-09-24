@@ -1,0 +1,21 @@
+version: 0.1
+
+phases:
+  install:
+    commands:
+      - gem install cfn-nag
+      - bundle install
+  pre_build:
+    commands:
+      - echo Do nothing
+  build:
+    commands:
+      - echo Build started on `date`
+      - rake
+      - cfn_nag_scan --input-path build
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - ./**

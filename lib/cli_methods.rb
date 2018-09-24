@@ -39,7 +39,10 @@ def rubycfn_structure(project_name)
   [
     project_name,
     project_name + '/build',
+    project_name + '/config',
+    project_name + '/lib/shared_concerns',
     project_name + '/lib/stacks',
-    project_name + '/lib/shared_concerns'
+    project_name + '/spec',
+    project_name + '/spec/lib'
   ]
 end
