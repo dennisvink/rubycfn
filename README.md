@@ -12,7 +12,7 @@ or, create a Gemfile with this content:
 ```
 source "https://rubygems.org"
 
-gem "rubycfn", "~> 0.1.6"
+gem "rubycfn", "~> 0.1.8"
 
 ```
 
@@ -23,6 +23,10 @@ Typing `rubycfn` at the prompt and answering its questions generates a new sampl
 ## Example code
 
 You can find stack examples at [https://github.com/dennisvink/rubycfn-example](https://github.com/dennisvink/rubycfn-example/)
+
+## Installing Gems
+
+Type `bundle install` to install all dependencies that are listed in the Gemfile.
 
 ## Running specs
 
