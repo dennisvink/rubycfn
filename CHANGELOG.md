@@ -2,10 +2,13 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.1.10 (Next Release)
+## 0.1.11 (Next Release)
+
+## 0.1.10
+  * Added conditions section support, condition in resources, and added several missing intrinsic functions. -- [@dennisvink][@dennisvink]
 
 ## 0.1.9
-  * Merged feature/cicd into release :')
+  * Merged feature/cicd into release :') -- [@dennisvink][@dennisvink]
 
 ## 0.1.8
   * `Export` in outputs now takes both strings and hashes -- [@dennisvink][@dennisvink]
