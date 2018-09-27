@@ -12,6 +12,7 @@ require "rubycfn/version"
 @parameters = {}
 @properties = {}
 @mappings = {}
+@conditions = {}
 @resources = {}
 @resource_name = ""
 @variables = {}
@@ -69,6 +70,36 @@ class Array
     }
   end
   alias_method :cidr, :fncidr
+
+  def fnequals
+    {
+      "Fn::Equals": self
+    }
+  end
+
+  def fnand
+    {
+      "Fn::And": self
+    }
+  end
+
+  def fnif
+    {
+      "Fn::If": self
+    }
+  end
+
+  def fnnot
+    {
+      "Fn::Not": self
+    }
+  end
+
+  def fnor
+    {
+      "Fn::Or": self
+    }
+  end
 
   def fnfindinmap(name = nil)
     self.unshift(name.cfnize) if name
@@ -145,6 +176,14 @@ module Rubycfn
       unless description.nil?
         TOPLEVEL_BINDING.eval("@description = '#{description}'")
       end
+    end
+
+    def self.condition(name, arguments)
+      name = name.to_s.cfnize
+      res = {
+        "#{name}": arguments
+      }
+      TOPLEVEL_BINDING.eval("@conditions = @conditions.deep_merge(#{res})")
     end
 
     def self.mapping(name, arguments = {})
@@ -280,7 +319,8 @@ module Rubycfn
             "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
               DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
-              Type: arguments[:type]
+              Type: arguments[:type],
+              Condition: arguments[:condition]
             }
           }
           TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
@@ -302,6 +342,7 @@ module Rubycfn
       skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
       skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
       skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
+      skeleton.merge!(Conditions: sort_json(TOPLEVEL_BINDING.eval("@conditions")))
       skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
       skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
       TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @mappings = @parameters = {}")
