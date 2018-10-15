@@ -1,0 +1,127 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+class String
+  def snake
+    self.gsub(/::/, '/').
+    gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+    gsub(/([a-z\d])([A-Z])/,'\1_\2').
+    tr("-", "_").
+    downcase
+  end
+end
+
+
+def add_code(line, append = false)
+  if append === true
+    orig_line = @code.pop
+    line = "#{orig_line}#{line}"
+  end
+  @code.push(line)
+end
+
+def wash(input = {}, target = :Ref)
+  return input unless input.respond_to?("each")
+  hash = {}
+  input.map do |key, value|
+    case key
+    when 'Ref'
+      hash = "###'" + value.to_s + "'." + key.downcase.to_s + '###'
+    else
+      if value.respond_to?("each")
+        hash[key] = wash(value, :Ref)
+      else
+        return input
+      end
+    end
+  end
+  hash
+end
+
+raise "Filename required" unless ARGV[0]
+raise "File does not exist" unless File.file?(ARGV[0])
+
+@code = []
+template = JSON.parse(File.read(ARGV[0]))
+resources = template["Resources"]
+outadd_code = template["Outadd_code"]
+parameters = template["Parameters"]
+outputs = template["Outputs"]
+
+add_code "module ConvertedStack"
+add_code "  module Main"
+add_code "    extend ActiveSupport::Concern"
+add_code "    included do"
+
+# Convert parameters
+parameters.each do |param_name, param_attr|
+  add_code "      parameter :#{param_name.snake}"
+  add_code(parameters.count > 1 ? "," : "", true)
+  param_attr.each_with_index do |attr, index|
+    add_code "                #{attr.first.snake}: \"#{attr.last}\""
+    add_code(index+1 == param_attr.count ? "" : ",", true)
+  end
+  add_code("")
+end
+
+# Convert resources
+resources.each do |resource_name, resource_attr|
+  properties = resource_attr["Properties"]
+  unless resource_attr["Properties"].empty?
+    add_code "      resource :#{resource_name.snake},"
+    add_code "               type: \"#{resource_attr["Type"]}\" do |r|"
+    properties.each do |k,v|
+      if v.respond_to?("each")
+        v = wash(v)
+        v = JSON.pretty_generate(v)
+        v = v.gsub(/\"\#\#\#/, "")
+        v = v.gsub(/\#\#\#\"/, "")
+
+        add_code "        r.property(:#{k.snake}) do"
+        add_code "          #{v}"
+        add_code "        end"
+      else
+        add_code "        r.property(:#{k.snake}) { #{v.to_json} }"
+      end
+    end
+    add_code "      end"
+  else
+    add_code "      resource :#{resource_name.snake},"
+    add_code "               type: \"#{resource_attr["Type"]}\""
+  end
+  add_code("")
+end
+
+outputs.each do |output_name, output_attr|
+  add_code "      output :#{output_name.snake}"
+  add_code(output_attr.count > 0 ? "," : "", true)
+  output_attr.each_with_index do |attr, index|
+    add_code "                #{attr.first.snake}: "
+    if attr.last.class == Hash
+      add_code(wash(attr.last), true)
+    else
+      add_code("\"#{attr.last}\"", true)
+    end
+    add_code(index+1 == output_attr.count ? "" : ",", true)
+  end
+  add_code("")
+end
+
+add_code "    end"
+add_code "  end"
+add_code "end"
+
+@code = @code.join("\n")
+@code = @code.gsub(/\"\#\#\#/, "")
+@code = @code.gsub(/\#\#\#\"/, "")
+@code = @code.gsub(/\'\#\#\#/, "'")
+@code = @code.gsub(/\#\#\#\'/, "'")
+@code = @code.gsub(/\#\#\#${1}/, "")
+
+File.open("generated.rb", "w") do |f|
+  f.puts(@code)
+end
+
+puts "Reformatting code..."
+`vim generated.rb -s format.vim 2>&1 >/dev/null`
