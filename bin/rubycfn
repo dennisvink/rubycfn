@@ -44,6 +44,8 @@ project_concern = render('project_concern.rb', { name: project_name.capitalize }
 project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
 rakefile = render('Rakefile', {}, path)
 spec_helper = render('spec_helper.rb', {}, path)
+converter = render('cfn2rubycfn', {}, path)
+vimfile = render('format.vim', {}, path)
 
 # Create directory structure
 FileUtils.mkdir_p project_path + '/lib/stacks/' + project_name + '_stack'
@@ -55,6 +57,9 @@ File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
 File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
 File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
 File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
+File.open("#{project_path}/cfn2rubycfn", 'w') { |file| file.write(converter) }
+File.chmod(0777,"#{project_path}/cfn2rubycfn")
+File.open("#{project_path}/format.vim", 'w') { |file| file.write(vimfile) }
 File.open("#{project_path}/config/buildspec.yml", 'w') { |file| file.write(buildspec) }
 File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
 File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
