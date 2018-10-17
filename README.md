@@ -1,6 +1,6 @@
 # RubyCfn
 
-RubyCfn is a light-weight tiny CloudFormation DSL to make expressing
+[RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation DSL to make expressing
 CloudFormation as Ruby code a bit more pleasing to the eye.
 
 ## Installation
