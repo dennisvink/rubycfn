@@ -13,7 +13,10 @@ require "rubycfn/version"
 @properties = {}
 @mappings = {}
 @conditions = {}
-@resources = {}
+@AWSresources = {}
+@GCPresources = []
+@MSFresources = {}
+@imports = []
 @resource_name = ""
 @variables = {}
 @global_variables = {}
@@ -271,6 +274,10 @@ module Rubycfn
       end
     end
 
+    def self.import(gcp_import)
+      TOPLEVEL_BINDING.eval("@imports.push(#{gcp_import})")
+    end
+
     def self.depends_on(resources)
       case resources
         when String
@@ -293,7 +300,11 @@ module Rubycfn
     end
 
     def self.property(name, index = 0, &block)
-      name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
+      if name.class == Symbol
+        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
+      else
+        name = TOPLEVEL_BINDING.eval("'#{name}'")
+      end
       res = { "#{name}": yield(block) }
       TOPLEVEL_BINDING.eval("@properties = @properties.deep_merge(#{res})")
     end
@@ -301,7 +312,19 @@ module Rubycfn
     def self.resource(name, arguments, &block)
       arguments[:amount] ||= 1
       origname = name.to_s
-      name = name.to_s.cfnize
+      # Allow for non-camelcased resource names 
+      if name.class == Symbol
+        name = name.to_s.cfnize
+      else
+        name = name.to_s
+      end
+      arguments[:type] =~ /^([A-Za-z0-9]*)\:\:/
+      arguments[:cloud] ||= $1
+
+      # Custom resource types are AWS resources
+      if arguments[:cloud] == "Custom" || arguments[:cloud] == "Rspec"
+        arguments[:cloud] = "AWS"
+      end
       arguments[:amount].times do |i|
         resource_suffix = i == 0 ? "" : "#{i+1}"
         if arguments[:type].class == Module
@@ -315,15 +338,24 @@ module Rubycfn
             TOPLEVEL_BINDING.eval("@resource_name = ''")
           end
 
-          res = {
-            "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
-              DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
-              Properties: TOPLEVEL_BINDING.eval("@properties"),
-              Type: arguments[:type],
-              Condition: arguments[:condition]
+          if arguments[:cloud] == "AWS"
+            res = {
+              "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
+                DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
+                Properties: TOPLEVEL_BINDING.eval("@properties"),
+                Type: arguments[:type],
+                Condition: arguments[:condition]
+              }
             }
-          }
-          TOPLEVEL_BINDING.eval("@resources = @resources.deep_merge(#{res})")
+            TOPLEVEL_BINDING.eval("@AWSresources = @AWSresources.deep_merge(#{res})")
+          elsif arguments[:cloud] == "GCP"
+            res = {
+              "name": "#{name.to_s}",
+              "type": "#{arguments[:type].to_s.gsub(/GCP::/, "")}",
+              "properties": TOPLEVEL_BINDING.eval("@properties")
+            }
+            TOPLEVEL_BINDING.eval("@GCPresources.push(#{res})")
+          end
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@properties = {}")
@@ -336,19 +368,31 @@ module Rubycfn
       )
     end
 
-    def self.render_template
-      skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
-      skeleton = JSON.parse(skeleton.to_json)
-      skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
-      skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
-      skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
-      skeleton.merge!(Conditions: sort_json(TOPLEVEL_BINDING.eval("@conditions")))
-      skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@resources")))
-      skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-      TOPLEVEL_BINDING.eval("@variables = @resources = @outputs = @properties = @mappings = @parameters = {}")
-      TOPLEVEL_BINDING.eval("@depends_on = []")
-      TOPLEVEL_BINDING.eval("@description = ''")
-      JSON.pretty_generate(skeleton.recursive_compact)
+    def self.render_template(type = "AWS")
+      case type
+      when "AWS"
+        skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
+        skeleton = JSON.parse(skeleton.to_json)
+        skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
+        skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
+        skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
+        skeleton.merge!(Conditions: sort_json(TOPLEVEL_BINDING.eval("@conditions")))
+        skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@AWSresources")))
+        skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
+        TOPLEVEL_BINDING.eval("@variables = @AWSresources = @outputs = @properties = @mappings = @parameters = {}")
+        TOPLEVEL_BINDING.eval("@depends_on = []")
+        TOPLEVEL_BINDING.eval("@description = ''")
+        JSON.pretty_generate(skeleton.recursive_compact)
+      when "GCP"
+        gcp_skeleton = {}
+        gcp_skeleton = JSON.parse(gcp_skeleton.to_json)
+        gcp_skeleton.merge!(imports: TOPLEVEL_BINDING.eval("@imports"))
+        gcp_skeleton.merge!(resources: sort_json(TOPLEVEL_BINDING.eval("@GCPresources")))
+        TOPLEVEL_BINDING.eval("@variables = @outputs = @properties = @mappings = @parameters = {}")
+        TOPLEVEL_BINDING.eval("@imports = @GCPresources = @depends_on = []")
+        TOPLEVEL_BINDING.eval("@description = ''")
+        JSON.pretty_generate(gcp_skeleton.recursive_compact)
+      end
     end
   end
 end
