@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.1.12 (Next Release)
+## 0.2.1 (Next Release)
+
+## 0.2.0
+  * Added support for GCP templates -- [@dennisvink][@dennisvink]
+  * No camel casing property and resource names if type is String instead of Symbol -- [@dennisvink][@dennisvink]
 
 ## 0.1.11
   * Added small script to convert a CloudFormation template to Rubycfn code -- [@dennisvink][@dennisvink]
