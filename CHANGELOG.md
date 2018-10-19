@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.2.1 (Next Release)
+## 0.2.2 (Next Release)
+
+## 0.2.1
+  * Fixed bug in VPC compound resource. Resource names are now camel cased -- [@dennisvink][@dennisvink]
+  * Updated README.md -- [@dennisvink][@dennisvink]
 
 ## 0.2.0
   * Added support for GCP templates -- [@dennisvink][@dennisvink]
