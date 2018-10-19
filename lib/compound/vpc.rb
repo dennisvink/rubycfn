@@ -32,7 +32,7 @@ module RubyCfn
 
           yield self if block_given? # Variable overrides
 
-          resource "#{prefix}_vpc#{suffix}",
+          resource "#{prefix}_vpc#{suffix}".cfnize,
                    type: "AWS::EC2::VPC" do |r, index|
             r.property(:cidr_block) { cidr_block }
             r.property(:enable_dns_support) { enable_dns_support }
@@ -40,22 +40,22 @@ module RubyCfn
             r.property(:instance_tenancy) { instance_tenancy } unless instance_tenancy.empty?
           end
 
-          resource "#{prefix}_internet_gateway#{suffix}",
+          resource "#{prefix}_internet_gateway#{suffix}".cfnize,
                    type: "AWS::EC2::InternetGateway"
 
-          resource "#{prefix}_route#{suffix}",
+          resource "#{prefix}_route#{suffix}".cfnize,
                    type: "AWS::EC2::Route" do |r, index|
             r.property(:destination_cidr_block) { "0.0.0.0/0" }
             r.property(:gateway_id) { "#{prefix}_internet_gateway#{suffix}".cfnize.ref }
             r.property(:route_table_id) { "#{prefix}_route_table#{suffix}".cfnize.ref }
           end
 
-          resource "#{prefix}_route_table#{suffix}",
+          resource "#{prefix}_route_table#{suffix}.cfnize",
                    type: "AWS::EC2::RouteTable" do |r, index|
             r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
           end
 
-          resource "#{prefix}_vpc_gateway_attachment#{suffix}",
+          resource "#{prefix}_vpc_gateway_attachment#{suffix}".cfnize,
                    type: "AWS::EC2::VPCGatewayAttachment" do |r, index|
             r.property(:internet_gateway_id) { "#{prefix}_internet_gateway#{suffix}".cfnize.ref }
             r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
