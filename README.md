@@ -10,7 +10,7 @@ Install Rubycfn:
 
 Starting a new Rubycfn project:
 `rubycfn`
-$ rubycfn
+```$ rubycfn
 __________ ____ __________________.___._________ _____________________
 \______   \    |   \______   \__  |   |\_   ___ \\_   _____/\______   \
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
@@ -20,6 +20,7 @@ __________ ____ __________________.___._________ _____________________
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
+```
 
 Installing project dependencies:
 `bundle`
@@ -259,9 +260,10 @@ First the flat files:
 `.env` and `.env.test` are files where you store environment variables that you may want to use in your project code. The difference between the .env and the .env.test file is that the .env file is the “global” environment variable file, whereas the .env.test file is an environment-specific environment variable file, that can override values you’ve specified in your .env file (or add new environment variables, for that matter). You’d typically have a .env.test, .env.acceptance and a .env.production file for things like instance sizing.
 
 Example:
-$ cat .env.test
+```$ cat .env.test
 # ENV vars for test environment
 APPLICATION_INSTANCE_CLASS="t2.micro"
+```
 
 To make use of - for example - .env.production as source, you can either override the ENVIRONMENT variable in the .env file, setting it to production, or you can invoke rake as: `ENVIRONMENT="production" rake`.
 
@@ -272,6 +274,7 @@ The `Rakefile` contain the tasks that are performed when you type the `rake` com
 `cfn2rubycfn` is a small helper script that converts AWS CloudFormation scripts to Rubycfn code. This allows you to migrate your existing projects over to Rubycfn quickly. It exports the converted CloudFormation script to `generated.rb`, a ready to use module for your stacks.
 
 Example:
+```
 $ cat sample.json
 {
   "AWSTemplateFormatVersion": "2010-09-09",
@@ -300,6 +303,7 @@ module ConvertedStack
     end
   end
 end
+```
 
 The `format.vim` file is used by the CloudFormation conversion script to reindent the file after conversion. You can make changes to the file to reflect your preferred style of code indentation.
 
@@ -308,16 +312,19 @@ Onto the subdirectories:
 The `build` directory is where all the compiled templates end up.
 
 Example:
+```
 $ ls -al build/
 total 24
 drwxr-xr-x   4 binx  staff   128 Oct 17 16:27 .
 drwxr-xr-x  16 binx  staff   512 Oct 17 16:27 ..
 -rw-r--r--   1 binx  staff  3197 Oct 17 16:27 test-gcp-demostack.json
 -rw-r--r--   1 binx  staff  4152 Oct 17 16:27 test-aws-demostack.json
+```
 
 The `spec` directory is where your unit tests live. These are not your application unit tests. A Rubycfn project lives in another universe than your application code. These unit tests test your expectations of the generated templates against reality. Such tests typically check for the existence and absence of particular resources, and values of properties. The tests are always executed when you run the `rake` command or the `rake spec` command. By default a project comes with unit tests that amongst other things check for the generation of the CI/CD pipeline and if it’s been configured correctly.
 
 Example:
+```
       context "Codebuild Service Role" do
         let(:code_build_service_role) { resources["CodeBuildDemoServiceRole"] }
         subject { code_build_service_role }
@@ -347,6 +354,7 @@ Example:
           end
         end
       end
+```
 
 The `config` directory contains your buildspec.yml, which contain all the instructions for the build pipeline. It’s also possible to source the buildspec.yml from another source, such as the application repository.
 
@@ -354,6 +362,7 @@ And finally, the `lib` directory contains all the relevant project code. The `li
 
 There are two directories under `lib`, namely `shared_concerns` and `stacks`. Concerns in this context simply mean Modules. Rubycfn relies on the ActiveConcern gem which makes modularisation of code very easy. The `shared_concerns` directory contains modules that can be used by several stacks. By default it has a `global_variables` module containing the following:
 
+```
 module Concerns
   module GlobalVariables
     extend ActiveSupport::Concern
@@ -366,12 +375,13 @@ module Concerns
     end
   end
 end
-
+```
 This module exposes a variable `environment`, which defaults to `test` if not set. It sources the value from the ENVIRONMENT environment variable. This variable can be used throughout your project at any place you see fit.
 
 The `stacks` directory is a container for all stacks that you want to generate. There is no limitation to the amount of stacks that it supports. By default, it comes with a single stack for your project:
 
 Example `lib/stacks/demo_stack.rb`:
+```
 module DemoStack
   extend ActiveSupport::Concern
   include Rubycfn
@@ -381,7 +391,7 @@ module DemoStack
     include DemoStack::CICD
   end
 end
-
+```
 Our stack file consists of two modules: Main and CICD. When compiling the code, the combined result of the Main and CICD module will be written to the DemoStack json file in the build/ directory. Modularising stacks allows for separation of code by cohesion or any other logic you deem appropriate.
 
 The stacks directory also contains a directory that is named the same, minus the .rb extension: `lib/stacks/demo_stack/`
@@ -389,6 +399,7 @@ The stacks directory also contains a directory that is named the same, minus the
 All the stack modules live inside this directory. The modules that make up the stack are the actual implementation of the resources, parameters and outputs.
 
 An example of such a module:
+```
 module DemoStack
   module Main
     extend ActiveSupport::Concern
@@ -420,9 +431,9 @@ module DemoStack
     end
   end
 end
-
+```
 When compiling the project, Rubycfn will recognise the resources for the different Cloud providers and write them to separate template files. When building a cloud agnostic solution, you implement the resources for the respective vendors. To decide which resources are deployed to which cloud provider, and to be able to switch them quickly, you can wrap the resources with `if` statements, but a better solution is to utilise the `amount` property for resources:
-
+```
       variable :cloudsql_vendor,
                default: "GCP",
                value: ENV["CLOUDSQL_VENDOR"]
@@ -438,7 +449,7 @@ When compiling the project, Rubycfn will recognise the resources for the differe
         type: "ARM::MSSQL" do |r|
 			...
       end
-
+```
 By implementing resources in the above way you can switch particular resources to another cloud vendor by simply updating the environment variable in your CI/CD pipeline, while still being able to use the same variables and the same ecosystem.
 
 ## License
