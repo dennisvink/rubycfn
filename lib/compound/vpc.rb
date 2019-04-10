@@ -50,7 +50,7 @@ module RubyCfn
             r.property(:route_table_id) { "#{prefix}_route_table#{suffix}".cfnize.ref }
           end
 
-          resource "#{prefix}_route_table#{suffix}.cfnize",
+          resource "#{prefix}_route_table#{suffix}".cfnize,
                    type: "AWS::EC2::RouteTable" do |r, index|
             r.property(:vpc_id) { "#{prefix}_vpc#{suffix}".cfnize.ref }
           end
