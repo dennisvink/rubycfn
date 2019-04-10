@@ -14,8 +14,6 @@ require "rubycfn/version"
 @mappings = {}
 @conditions = {}
 @AWSresources = {}
-@GCPresources = []
-@MSFresources = {}
 @imports = []
 @resource_name = ""
 @variables = {}
@@ -274,10 +272,6 @@ module Rubycfn
       end
     end
 
-    def self.import(gcp_import)
-      TOPLEVEL_BINDING.eval("@imports.push(#{gcp_import})")
-    end
-
     def self.depends_on(resources)
       case resources
         when String
@@ -338,24 +332,15 @@ module Rubycfn
             TOPLEVEL_BINDING.eval("@resource_name = ''")
           end
 
-          if arguments[:cloud] == "AWS"
-            res = {
-              "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
-                DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
-                Properties: TOPLEVEL_BINDING.eval("@properties"),
-                Type: arguments[:type],
-                Condition: arguments[:condition]
-              }
+          res = {
+            "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
+              DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
+              Properties: TOPLEVEL_BINDING.eval("@properties"),
+              Type: arguments[:type],
+              Condition: arguments[:condition]
             }
-            TOPLEVEL_BINDING.eval("@AWSresources = @AWSresources.deep_merge(#{res})")
-          elsif arguments[:cloud] == "GCP"
-            res = {
-              "name": "#{name.to_s}",
-              "type": "#{arguments[:type].to_s.gsub(/GCP::/, "")}",
-              "properties": TOPLEVEL_BINDING.eval("@properties")
-            }
-            TOPLEVEL_BINDING.eval("@GCPresources.push(#{res})")
-          end
+          }
+          TOPLEVEL_BINDING.eval("@AWSresources = @AWSresources.deep_merge(#{res})")
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@properties = {}")
@@ -383,15 +368,6 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         JSON.pretty_generate(skeleton.recursive_compact)
-      when "GCP"
-        gcp_skeleton = {}
-        gcp_skeleton = JSON.parse(gcp_skeleton.to_json)
-        gcp_skeleton.merge!(imports: TOPLEVEL_BINDING.eval("@imports"))
-        gcp_skeleton.merge!(resources: sort_json(TOPLEVEL_BINDING.eval("@GCPresources")))
-        TOPLEVEL_BINDING.eval("@variables = @outputs = @properties = @mappings = @parameters = {}")
-        TOPLEVEL_BINDING.eval("@imports = @GCPresources = @depends_on = []")
-        TOPLEVEL_BINDING.eval("@description = ''")
-        JSON.pretty_generate(gcp_skeleton.recursive_compact)
       end
     end
   end
