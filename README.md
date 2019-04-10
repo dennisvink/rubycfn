@@ -1,7 +1,7 @@
 # RubyCfn
 
 [RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation, Deployment Manager and ARM DSL to make expressing
-cloud vendor templates as Ruby code a bit more pleasing to the eye.
+AWS templates as Ruby code a bit more pleasing to the eye.
 
 ## Quick start
 
@@ -46,7 +46,7 @@ Standardisation is key to keep your engineering team agile. Time spent on projec
 
 ## Overview of Rubycfn
 
-RubyCfn is an abstraction layer around several Cloud templates such as CloudFormation (AWS), Deployment Manager (GCP) and ARM (Azure). Rubycfn projects are set up for easy grouping of resources that have a mutual cohesion, and structured in such a way to make it easy for developers to quickly find what they need. Rubycfn is a so-called ‘DSL’ on top of these template formats and presents templates as code that is friendly to the eye and easy to read and understand. In addition of being an alternate representation of a template, Rubycfn allows you to combine template generation with programming logic making it far more versatile than what the respective cloud providers offer in their templates. Last but not least Rubycfn enforces code quality by testing the generated templates against unit tests, checking if the expected resources and their configuration matches with what was actually generated, and by LINTing the templates and the underlying code that generates the templates.
+RubyCfn is an abstraction layer around several Cloud templates such as CloudFormation (AWS). Rubycfn projects are set up for easy grouping of resources that have a mutual cohesion, and structured in such a way to make it easy for developers to quickly find what they need. Rubycfn is a so-called ‘DSL’ on top of these template formats and presents templates as code that is friendly to the eye and easy to read and understand. In addition of being an alternate representation of a template, Rubycfn allows you to combine template generation with programming logic making it far more versatile than what AWS offers in their templates. Last but not least Rubycfn enforces code quality by testing the generated templates against unit tests, checking if the expected resources and their configuration matches with what was actually generated, and by LINTing the templates and the underlying code that generates the templates.
 
 Out of the box Rubycfn comes with a CI/CD pipeline. It’s a serverless pipeline running on Amazon Web Services (AWS), which you can fully configure using the complimentary `buildspec.yml`.  The CI/CD pipeline is linked to a Github repository, and a change in this repository triggers the CI/CD pipeline to execute the steps you’ve defined in the buildspec.yml.
 
@@ -57,7 +57,7 @@ Typically a commit to your application GIT repository triggers the build process
 - Application (unit) tests are ran
 - The build artifact is stored (versioned), so you can use it as input for your delivery pipeline
 - The artifact may or may not include the application code. A part of the build process could - for example - also be that the application is dockerized and pushed to a docker registry.
-- The resulting artifact is the complete recipe to deploy the application and associated resources to AWS, GCP or Azure.
+- The resulting artifact is the complete recipe to deploy the application and associated resources to AWS
 
 ## Example code
 
@@ -317,7 +317,6 @@ $ ls -al build/
 total 24
 drwxr-xr-x   4 binx  staff   128 Oct 17 16:27 .
 drwxr-xr-x  16 binx  staff   512 Oct 17 16:27 ..
--rw-r--r--   1 binx  staff  3197 Oct 17 16:27 test-gcp-demostack.json
 -rw-r--r--   1 binx  staff  4152 Oct 17 16:27 test-aws-demostack.json
 ```
 
@@ -404,59 +403,21 @@ module DemoStack
   module Main
     extend ActiveSupport::Concern
     included do
-      import(
-        path: "cloudsql.jinja"
-      )
 
       resource :api_gateway_rest_api,
         type: "AWS::ApiGateway::RestApi" do |r|
         r.property(:name) { "#{environment}-webhook" }
       end
-
-      resource "cloudsql",
-        type: "GCP::cloudsql.jinja" do |r|
-        r.property("database") do
-          {
-            "name": "#{environment}"
-          }
-        end
-        r.property("dbUser") do
-          {
-            "password": "test123_"
-          }
-        end
-        r.property("failover") { true }
-        r.property("readReplicas") { 1 }
-      end
     end
   end
 end
 ```
-When compiling the project, Rubycfn will recognise the resources for the different Cloud providers and write them to separate template files. When building a cloud agnostic solution, you implement the resources for the respective vendors. To decide which resources are deployed to which cloud provider, and to be able to switch them quickly, you can wrap the resources with `if` statements, but a better solution is to utilise the `amount` property for resources:
-```
-      variable :cloudsql_vendor,
-               default: "GCP",
-               value: ENV["CLOUDSQL_VENDOR"]
-
-      resource "cloudsql",
-        amount: cloudsql_vendor == "GCP" ? 1 : 0,
-        type: "GCP::cloudsql.jinja" do |r|
-            ...
-      end
-
-      resource "cloudsql",
-        amount: cloudsql_vendor == "ARM" ? 1 : 0,
-        type: "ARM::MSSQL" do |r|
-			...
-      end
-```
-By implementing resources in the above way you can switch particular resources to another cloud vendor by simply updating the environment variable in your CI/CD pipeline, while still being able to use the same variables and the same ecosystem.
 
 ## License
 
 MIT License
 
-Copyright (c) 2018 Dennis Vink
+Copyright (c) 2019 Dennis Vink
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
