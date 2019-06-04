@@ -2,7 +2,10 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.2 (Next Release)
+## 0.3.3 (Next Release)
+
+## 0.3.2
+  * Added AWS::Serverless::Transform capability -- [@dennisvink][@dennisvink]
 
 ## 0.3.1
   * Fixed bug in VPC template generation -- [@dennisvink][@dennisvink]
