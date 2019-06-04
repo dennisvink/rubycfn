@@ -375,6 +375,7 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@variables = @AWSresources = @outputs = @properties = @mappings = @parameters = {}")
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
+        TOPLEVEL_BINDING.eval("@transform = ''")
         JSON.pretty_generate(skeleton.recursive_compact)
       end
     end
