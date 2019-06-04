@@ -413,6 +413,11 @@ module DemoStack
 end
 ```
 
+## Serverless Transforms
+
+To allow for SAM transformation use the 'transform' method inside your template.
+The transform method takes an optional argument, and defaults to "AWS::Serverless-2016-10-31"
+
 ## License
 
 MIT License
