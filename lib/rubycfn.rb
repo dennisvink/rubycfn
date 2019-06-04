@@ -8,6 +8,7 @@ require "rubycfn/version"
 
 @depends_on = [] 
 @description = ""
+@transform = ""
 @outputs = {}
 @parameters = {}
 @properties = {}
@@ -170,6 +171,12 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@variables[:#{name}]")
       else
         TOPLEVEL_BINDING.eval("@global_variables[:#{name}]")
+      end
+    end
+
+    def self.transform(transform = "AWS::Serverless-2016-10-31")
+      unless transform.nil?
+        TOPLEVEL_BINDING.eval("@transform = '#{transform}'")
       end
     end
 
@@ -358,6 +365,7 @@ module Rubycfn
       when "AWS"
         skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
         skeleton = JSON.parse(skeleton.to_json)
+        skeleton.merge!(Transform: TOPLEVEL_BINDING.eval("@transform"))
         skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
         skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
         skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
