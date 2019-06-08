@@ -103,6 +103,6 @@ File.open("#{project_path}/lib/stacks/vpc_stack.rb", 'w') { |file| file.write(vp
 File.open("#{project_path}/lib/stacks/vpc_stack/vpc.rb", 'w') { |file| file.write(vpc_concern) }
 
 puts "Setting up Rubycfn #{project_name} project..."
-`cd #{project_name} && git init`
+`cd #{project_name}-rubycfn && git init`
 `bundle`
 puts "Done!"
