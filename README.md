@@ -3,6 +3,10 @@
 [RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation, Deployment Manager and ARM DSL to make expressing
 AWS templates as Ruby code a bit more pleasing to the eye.
 
+Note, as of 0.3.3 the default project structure changed quite a bit. The README.md does not reflect
+those changes yet. A rubycfn project is now provisioned with a nested stack set up, and includes
+a nested VPC and a nested ECS stack.
+
 ## Quick start
 
 Install Rubycfn:
@@ -16,7 +20,7 @@ __________ ____ __________________.___._________ _____________________
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
  |    |   \    |  / |    |   \\____   |\     \____|     \    |    |   \
  |____|_  /______/  |______  // ______| \______  /\___  /    |______  /
-        \/                 \/ \/               \/     \/            \/ [v0.3.1]
+        \/                 \/ \/               \/     \/            \/ [v0.3.3]
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
@@ -37,8 +41,14 @@ Running Rubycfn unit tests:
 Running tests and compiling:
 `rake`
 
-Converting CloudFormation JSON template to Rubycfn:
-`./cfn2rubycfn /path/to/cloudformation_template.json`
+Uploading built stacks to s3:
+`rake upload`
+
+Checking difference between local and remote stack:
+`rake diff`
+
+Deploying stack to AWS:
+`rake apply`
 
 ## Philosophy
 
@@ -249,7 +259,6 @@ You start a new project by typing `rubycfn` at the prompt. This will ask you a c
 -rw-r--r--   1 binx  staff   246 Oct 17 16:06 Gemfile
 -rw-r--r--   1 binx  staff   346 Oct 17 16:06 Rakefile
 drwxr-xr-x   2 binx  staff    64 Oct 17 16:06 build
--rwxrwxrwx   1 binx  staff  3223 Oct 17 16:06 cfn2rubycfn
 drwxr-xr-x   3 binx  staff    96 Oct 17 16:06 config
 -rw-r--r--   1 binx  staff    15 Oct 17 16:06 format.vim
 drwxr-xr-x   6 binx  staff   192 Oct 17 16:06 lib
@@ -270,42 +279,6 @@ To make use of - for example - .env.production as source, you can either overrid
 The `Gemfile` is a collection of Ruby dependencies. By running `bundle` you install the dependencies.
 
 The `Rakefile` contain the tasks that are performed when you type the `rake` command. It consists of a `compile` task and a `spec` task. You can invoke the tasks individually by typing `rake compile` or `rake spec`, but by default the `spec` task is ran first, and then the `compile` task. A “spec” is another word for unit test. It’s important to run the unit test first, so that if a test fails no template is generated. If you just run `rake` both tasks are executed sequentially, provided the specs throw no error.
-
-`cfn2rubycfn` is a small helper script that converts AWS CloudFormation scripts to Rubycfn code. This allows you to migrate your existing projects over to Rubycfn quickly. It exports the converted CloudFormation script to `generated.rb`, a ready to use module for your stacks.
-
-Example:
-```
-$ cat sample.json
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Resources": {
-    "ApiGatewayRestApi": {
-      "Properties": {
-        "Name": "trigger-github-webhook"
-      },
-      "Type": "AWS::ApiGateway::RestApi"
-    }
-  }
-}
-
-$ ./cfn2rubycfn sample.json
-Reformatting code...
-
-$ cat generated.rb
-module ConvertedStack
-  module Main
-    extend ActiveSupport::Concern
-    included do
-      resource :api_gateway_rest_api,
-        type: "AWS::ApiGateway::RestApi" do |r|
-        r.property(:name) { "trigger-github-webhook" }
-      end
-    end
-  end
-end
-```
-
-The `format.vim` file is used by the CloudFormation conversion script to reindent the file after conversion. You can make changes to the file to reflect your preferred style of code indentation.
 
 Onto the subdirectories:
 
