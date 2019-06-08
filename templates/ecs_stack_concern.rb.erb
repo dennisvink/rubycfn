@@ -3,6 +3,10 @@ module EcsStack
     extend ActiveSupport::Concern
 
     included do
+      transform
+      parameter :vpc,
+                description: "VPC ID"
+
       # Create an empty ECS Cluster to launch fargate bastions (or other things) in
       resource :<%= name.downcase %>_ecs_cluster,
                type: "AWS::ECS::Cluster"
