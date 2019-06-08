@@ -1,6 +1,5 @@
 # Rubycfn RubyCFN is a light-weight CloudFormation DSL
 require 'active_support/concern'
-require "compound/resources"
 require "json"
 require "neatjson"
 require "rubycfn/version"
