@@ -1,0 +1,91 @@
+AllCops:
+  TargetRubyVersion: 2.3
+  
+  DisplayCopNames: true
+  Include:
+    - "Gemfile"
+    - "Rakefile"
+    - "bin/*"
+    - "*.gemspec"
+    - "lib/**/*.rb"
+  Exclude:
+    - "test/**/*.rb"
+    - "spec/**/*.rb"
+
+Metrics/AbcSize:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/ClassLength:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/CyclomaticComplexity:
+  Max: 40
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/ModuleLength:
+  Max: 500
+
+Metrics/MethodLength:
+  Max: 40
+
+Metrics/BlockLength:
+  Max: 500
+
+Performance/Casecmp:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/Next:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Security/MarshalLoad:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    default: '()'
+    '%i':    '()'
+    '%w':    '()'
+
+Style/ExpandPathArguments:
+  Enabled: false
+
+Style/RescueStandardError:
+  EnforcedStyle: "implicit"
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/DateTime:
+  Enabled: false
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: space

@@ -55,6 +55,7 @@ parent_spec = render('parent_stack_spec.rb', { name: project_name.capitalize }, 
 project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
 project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
 rakefile = render('Rakefile', {}, path)
+rubocop = render('.rubocop.yml', {}, path)
 shared_methods = render('shared_methods.rb', {}, path)
 spec_helper = render('spec_helper.rb', {}, path)
 subnets = render('subnets.rb', { name: project_name }, path)
@@ -92,6 +93,7 @@ File.open("#{project_path}/spec/lib/parent_spec.rb", 'w') { |file| file.write(pa
 File.open("#{project_path}/lib/stacks/parent_stack.rb", 'w') { |file| file.write(project_stack) }
 File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", 'w') { |file| file.write(project_concern) }
 File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
+File.open("#{project_path}/.rubocop.yml", 'w') { |file| file.write(rubocop) }
 File.open("#{project_path}/lib/shared_concerns/shared_methods.rb", 'w') { |file| file.write(shared_methods) }
 File.open("#{project_path}/spec/spec_helper.rb", 'w') { |file| file.write(spec_helper) }
 File.open("#{project_path}/lib/stacks/vpc_stack/subnets.rb", 'w') { |file| file.write(subnets) }
