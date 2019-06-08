@@ -1,0 +1,16 @@
+module EcsStack
+  module EcsCluster
+    extend ActiveSupport::Concern
+
+    included do
+      # Create an empty ECS Cluster to launch fargate bastions (or other things) in
+      resource :<%= name.downcase %>_ecs_cluster,
+               type: "AWS::ECS::Cluster"
+
+      output :<%= name.downcase %>_ecs_cluster,
+             value: "<%= name %>EcsCluster".ref
+      output :<%= name.downcase %>_ecs_cluster_arn,
+             value: "<%= name.downcase %>EcsCluster".ref("Arn")
+    end
+  end
+end

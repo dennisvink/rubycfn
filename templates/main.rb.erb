@@ -1,30 +1,16 @@
-require "rubycfn"
+require "aws-sdk-s3"
+require "aws-sdk"
+require "colorize"
+require "digest/md5"
 require "dotenv"
+require "fileutils"
+require "json"
 
-Dotenv.load(".env")
-Dotenv.load(".env.private")
-Dotenv.load(".env.#{ENV["ENVIRONMENT"]}")
+require_relative "aws_sdk"
+require_relative "compiler"
+require_relative "dependencies"
+require_relative "deploy"
+require_relative "helpers"
+require_relative "upload_stack"
 
-# Include all group concerns
-Dir[File.expand_path('../shared_concerns/', __FILE__) + '/*.rb'].sort.each do |file|
-  require file
-end
-
-# SharedConcerns module is injected in each stack
-module SharedConcerns
-  extend ActiveSupport::Concern
-  include Rubycfn
-
-  included do
-    include Concerns::GlobalVariables
-  end
-end
-
-# Include all stack concerns
-Dir[File.expand_path('../stacks/', __FILE__) + '/*.rb'].sort.each do |file|
-  subdir = File.basename(file, ".rb") 
-  Dir[File.expand_path('../stacks/', __FILE__) + "/#{subdir}/*.rb"].sort.each do |subfile|
-    require subfile
-  end
-  require file
-end
+@stack_hashes = {}

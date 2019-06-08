@@ -32,20 +32,32 @@ dotenv = render('.env', {
   :region => region
 }, path)
 
-buildspec = render('buildspec.yml', {}, path)
-cicd = render('cicd.rb', { name: project_name.capitalize, small_name: project_name }, path)
+aws_sdk = render('aws_sdk.rb', {}, path)
 compile = render('compile.rb', {}, path)
+compiler = render('compiler.rb', {}, path)
+dependencies = render('dependencies.rb', {}, path)
+deploy = render('deploy.rb', {}, path)
+deploy2 = render('deploy2.rb', { project_name: project_name }, path)
 dotenv_test = render('.env.test', { project_name: project_name }, path)
-example_spec = render('example_stack_spec.rb', { name: project_name.capitalize }, path)
+dotenv_production = render('.env.production', { project_name: project_name }, path)
+dotenv_rspec = render('.env.rspec', { project_name: project_name }, path)
+ecs_stack = render('ecs_stack.rb', {}, path)
+ecs_stack_concern = render('ecs_Stack_concern.rb', { project_name: project_name }, path)
 gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
-global_variables = render('global_variables.rb', {}, path)
+global_variables = render('global_variables.rb', { name: project_name.downcase }, path)
+helpers = render('helpers.rb', {}, path)
+helper_methods = render('helper_methods.rb', {}, path)
 main = render('main.rb', {}, path)
+parent_spec = render('parent_stack_spec.rb', { name: project_name.capitalize }, path)
 project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
 project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
 rakefile = render('Rakefile', {}, path)
+shared_methods = render('shared_methods.rb', {}, path)
 spec_helper = render('spec_helper.rb', {}, path)
-converter = render('cfn2rubycfn', {}, path)
-vimfile = render('format.vim', {}, path)
+upload_stack = render('upload_stack.rb.erb'. {}, path)
+vpc_stack = render('vpc_stack', { name: project_name }, path)
+vpc_concern = render('vpc_concerns.rb', { name: project_name }, path)
+vpc_spec = render('vpc_spec.rb', { name: project_name }, path)
 
 # Create directory structure
 FileUtils.mkdir_p project_path + '/lib/stacks/' + project_name + '_stack'
@@ -53,20 +65,30 @@ rubycfn_structure(project_path).each do |dir|
   FileUtils.mkdir_p dir
 end
 
+File.open("#{project_path}/lib/aws_helper/aws_sdk.rb", 'w') { |file| file.write(aws_sdk) }
+File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
+File.open("#{project_path}/lib/aws_helper/compiler.rb", 'w') { |file| file.write(compiler) }
+File.open("#{project_path}/lib/aws_helper/dependencies.rb", 'w') { |file| file.write(dependencies) }
+File.open("#{project_path}/lib/aws_helper/deploy.rb", 'w') { |file| file.write(deploy) }
+File.open("#{project_path}/lib/core/deploy.rb", 'w') { |file| file.write(deploy2) }
 File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
 File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
+File.open("#{project_path}/.env.production", 'w') { |file| file.write(dotenv_production) }
+File.open("#{project_path}/.env.rspec", 'w') { |file| file.write(dotenv_rspec) }
+File.open("#{project_path}/lib/stacks/ecs_stack.rb", 'w') { |file| file.write(ecs_stack) }
+File.open("#{project_path}/lib/stacks/ecs_stack/ecs_cluster.rb", 'w') { |file| file.write(ecs_stack_concern) }
 File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
-File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
-File.open("#{project_path}/cfn2rubycfn", 'w') { |file| file.write(converter) }
-File.chmod(0777,"#{project_path}/cfn2rubycfn")
-File.open("#{project_path}/format.vim", 'w') { |file| file.write(vimfile) }
-File.open("#{project_path}/config/buildspec.yml", 'w') { |file| file.write(buildspec) }
-File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
-File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
 File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |file| file.write(global_variables) }
-File.open("#{project_path}/lib/stacks/#{project_name}_stack.rb", 'w') { |file| file.write(project_stack) }
-File.open("#{project_path}/lib/stacks/#{project_name}_stack/example.rb", 'w') { |file| file.write(project_concern) }
-File.open("#{project_path}/lib/stacks/#{project_name}_stack/cicd.rb", 'w') { |file| file.write(cicd) }
+File.open("#{project_path}/lib/aws_helper/helpers.rb", 'w') { |file| file.write(helpers) }
+File.open("#{project_path}/lib/shared_concerns/helper_methods.rb", 'w') { |file| file.write(helper_methods) }
+File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
+File.open("#{project_path}/spec/lib/parent_spec.rb", 'w') { |file| file.write(parent_spec) }
+File.open("#{project_path}/lib/stacks/parent_stack.rb", 'w') { |file| file.write(project_stack) }
+File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", 'w') { |file| file.write(project_concern) }
+File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
+File.open("#{project_path}/lib/shared_concerns/shared_methods.rb", 'w') { |file| file.write(shared_methods) }
 File.open("#{project_path}/spec/spec_helper.rb", 'w') { |file| file.write(spec_helper) }
-File.open("#{project_path}/spec/lib/#{project_name}_spec.rb", 'w') { |file| file.write(example_spec) }
-
+File.open("#{project_path}/lib/aws_helper/upload_stack.rb", 'w') { |file| file.write(upload_stack) }
+File.open("#{project_path}/spec/lib/vpc_spec.rb", 'w') { |file| file.write(vpc_spec) }
+File.open("#{project_path}/lib/stacks/vpc_stack.rb", 'w') { |file| file.write(vpc_stack) }
+File.open("#{project_path}/lib/stacks/vpc_stack/vpc.rb", 'w') { |file| file.write(vpc_concern) }
