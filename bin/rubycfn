@@ -48,6 +48,7 @@ global_variables = render('global_variables.rb', { name: project_name.downcase }
 helpers = render('helpers.rb', {}, path)
 helper_methods = render('helper_methods.rb', {}, path)
 main = render('main.rb', {}, path)
+main_aws_helper = render('main_aws_helper.rb', {}, path)
 parent_spec = render('parent_stack_spec.rb', { name: project_name.capitalize }, path)
 project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
 project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
@@ -81,6 +82,7 @@ File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |fil
 File.open("#{project_path}/lib/aws_helper/helpers.rb", 'w') { |file| file.write(helpers) }
 File.open("#{project_path}/lib/shared_concerns/helper_methods.rb", 'w') { |file| file.write(helper_methods) }
 File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
+File.open("#{project_path}/lib/aws_helper/main.rb", 'w') { |file| file.write(main_aws_helper) }
 File.open("#{project_path}/spec/lib/parent_spec.rb", 'w') { |file| file.write(parent_spec) }
 File.open("#{project_path}/lib/stacks/parent_stack.rb", 'w') { |file| file.write(project_stack) }
 File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", 'w') { |file| file.write(project_concern) }
