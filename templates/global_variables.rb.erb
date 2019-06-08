@@ -7,6 +7,10 @@ module Concerns
                default: "test",
                global: true,
                value: ENV["ENVIRONMENT"]
+
+      variable :stack_name,
+               default: "#{environment}-<%= name %>",
+               value: ENV["STACK_NAME"]
     end
   end
 end
