@@ -101,3 +101,8 @@ File.open("#{project_path}/lib/aws_helper/upload_stack.rb", 'w') { |file| file.w
 File.open("#{project_path}/spec/lib/vpc_spec.rb", 'w') { |file| file.write(vpc_spec) }
 File.open("#{project_path}/lib/stacks/vpc_stack.rb", 'w') { |file| file.write(vpc_stack) }
 File.open("#{project_path}/lib/stacks/vpc_stack/vpc.rb", 'w') { |file| file.write(vpc_concern) }
+
+puts "Setting up Rubycfn #{project_name} project..."
+`cd #{project_name} && git init`
+`bundle`
+puts "Done!"
