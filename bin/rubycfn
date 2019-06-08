@@ -33,7 +33,6 @@ dotenv = render('.env', {
 }, path)
 
 aws_sdk = render('aws_sdk.rb', {}, path)
-compile = render('compile.rb', {}, path)
 compiler = render('compiler.rb', {}, path)
 core_deploy = render('core_deploy.rb', { name: project_name }, path)
 core_upload = render('core_upload.rb', {}, path)
@@ -70,7 +69,6 @@ rubycfn_structure(project_path).each do |dir|
 end
 
 File.open("#{project_path}/lib/aws_helper/aws_sdk.rb", 'w') { |file| file.write(aws_sdk) }
-File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
 File.open("#{project_path}/lib/aws_helper/compiler.rb", 'w') { |file| file.write(compiler) }
 File.open("#{project_path}/lib/aws_helper/dependencies.rb", 'w') { |file| file.write(dependencies) }
 File.open("#{project_path}/lib/aws_helper/deploy.rb", 'w') { |file| file.write(deploy) }
