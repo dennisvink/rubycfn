@@ -1,0 +1,7 @@
+def stack_to_md5(stack_name, stack)
+  @stack_hashes[stack_name] = Digest::MD5.hexdigest(JSON.pretty_generate(JSON.parse(stack.to_s)))
+end
+
+def generate_s3_filename(filename, hash)
+  "#{File.basename(filename, ".json")}-#{hash}.json"
+end

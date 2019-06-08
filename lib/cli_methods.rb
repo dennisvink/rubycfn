@@ -39,9 +39,13 @@ def rubycfn_structure(project_name)
   [
     project_name,
     project_name + '/build',
-    project_name + '/config',
+    project_name + '/lib/aws_helper',
+    project_name + '/lib/core',
     project_name + '/lib/shared_concerns',
     project_name + '/lib/stacks',
+    project_name + '/lib/stacks/ecs_stack',
+    project_name + '/lib/stacks/parent_stack',
+    project_name + '/lib/stacks/vpc_stack',
     project_name + '/spec',
     project_name + '/spec/lib'
   ]
