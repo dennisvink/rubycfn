@@ -1,0 +1,19 @@
+def vpc_subnets
+  [
+    {
+      "ec2_public": {
+        "owner": "<%= name.downcase %>",
+        "public": true,
+        "offset": 2
+      }
+    },
+    {
+      "ec2_private": {
+        "owner": "<%= name.downcase %>",
+        "public": false,
+        "offset": 3
+      }
+    }
+  ]
+end
+

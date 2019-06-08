@@ -1,6 +1,9 @@
 require "rubygems"
 require "bundler"
 require "rspec/core/rake_task"
+require "rubocop/rake_task"
+
+Bundler.setup
 
 RSpec::Core::RakeTask.new do |t|
   t.rspec_opts = \
@@ -8,10 +11,40 @@ RSpec::Core::RakeTask.new do |t|
     " --out test-reports/rspec.xml"
 end
 
+desc "Apply CloudFormation template"
+task :apply do
+  require_relative "lib/main"
+  require_relative "lib/core/deploy"
+end
+
+desc "Upload stacks to s3"
+task :upload do
+  require_relative "lib/main"
+  require_relative "lib/core/upload"
+end
+
+desc "Clean build directory"
+task :clean do
+  Dir.foreach("build/") do |f|
+    fn = File.join("build/", f)
+    File.delete(fn) if f != "." && f != ".."
+  end
+end
+
+desc "Diff CloudFormation template"
+task :diff do
+  require_relative "lib/main"
+  require_relative "lib/core/diff"
+end
+
 desc "Compile CloudFormation"
 task :compile do
   require_relative "lib/main"
-  require_relative "lib/compile"
+  require_relative "lib/core/compile"
+end
+
+RuboCop::RakeTask.new(:rubocop) do |t|
+  t.options = ["--display-cop-names"]
 end
 
 task default: %i(spec compile)
