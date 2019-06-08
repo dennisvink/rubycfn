@@ -1,0 +1,87 @@
+require_relative "subnets"
+
+module VpcStack
+  module Main
+    extend ActiveSupport::Concern
+
+    included do
+      variable :cidr_block,
+               default: "10.0.0.0/16",
+               value: ENV["VPC_CIDR_BLOCK"]
+
+      resource :<%= name.downcase %>_vpc,
+               type: "AWS::EC2::VPC" do |r|
+        r.property(:cidr_block) { cidr_block }
+        r.property(:enable_dns_support) { true }
+        r.property(:enable_dns_hostnames) { true }
+      end
+
+      resource "<%= name.downcase %>_internet_gateway".cfnize,
+               type: "AWS::EC2::InternetGateway"
+
+      resource "<%= name.downcase %>_route".cfnize,
+               type: "AWS::EC2::Route" do |r|
+        r.property(:destination_cidr_block) { "0.0.0.0/0" }
+        r.property(:gateway_id) { "<%= name.downcase %>_internet_gateway".cfnize.ref }
+        r.property(:route_table_id) { "<%= name.downcase %>_route_table".cfnize.ref }
+      end
+
+      resource "<%= name.downcase %>_route_table".cfnize,
+               type: "AWS::EC2::RouteTable" do |r|
+        r.property(:vpc_id) { "<%= name.downcase %>_vpc".cfnize.ref }
+      end
+
+      resource "<%= name.downcase %>_vpc_gateway_attachment".cfnize,
+               type: "AWS::EC2::VPCGatewayAttachment" do |r|
+        r.property(:internet_gateway_id) { "<%= name.downcase %>_internet_gateway".cfnize.ref }
+        r.property(:vpc_id) { "<%= name.downcase %>_vpc".cfnize.ref }
+      end
+
+      vpc_subnets.each_with_index do |subnet, _subnet_count|
+        subnet.each do |subnet_name, arguments|
+          resource "<%= name.downcase %>_#{subnet_name}_subnet".cfnize,
+                   type: "AWS::EC2::Subnet",
+                   amount: 3 do |r, index|
+            r.property(:availability_zone) do
+              {
+                "Fn::GetAZs": ""
+              }.fnselect(index)
+            end
+            r.property(:cidr_block) do
+              [
+                "<%= name %>Vpc".ref("CidrBlock"),
+                (3 * arguments[:offset]).to_s,
+                (Math.log(256) / Math.log(2)).floor.to_s
+              ].fncidr.fnselect(index + (3 * arguments[:offset]) - 3)
+            end
+            r.property(:map_public_ip_on_launch) { arguments[:public] }
+            r.property(:tags) do
+              [
+                {
+                  "Key": "owner",
+                  "Value": arguments[:owner].to_s.cfnize
+                },
+                {
+                  "Key": "resource_type",
+                  "Value": subnet_name.to_s.cfnize
+                }
+              ]
+            end
+            r.property(:vpc_id) { "<%= name %>Vpc".ref }
+          end
+
+          # Generate outputs for these subnets
+          3.times do |i|
+            output "#{subnet_name}_subnet#{i.positive? ? (i + 1) : ""}_name".cfnize,
+                   value: "<%= name.downcase %>_#{subnet_name}_subnet#{i.positive? ? (i + 1) : ""}".cfnize.ref
+          end
+        end
+      end
+
+      output :vpc_cidr,
+             value: "<%= name %>Vpc".ref("CidrBlock")
+      output :<%= name.downcase %>_vpc,
+             value: "<%= name %>Vpc".ref
+    end
+  end
+end

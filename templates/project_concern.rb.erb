@@ -1,59 +1,25 @@
+require_relative "../vpc_stack/subnets"
+
 module <%= name %>Stack
-  module Main
+  module Parent
     extend ActiveSupport::Concern
 
     included do
-      # Example stack parameter
-      #parameter :example_stack_parameter_name,
-      #          default: "example_value"
-
-      # Example variables
-      variable :example_variable,
-               required: false,
-               value: ENV["SOME_ENV_VAR"],
-               default: "default_value"
-
-      variable :cidr_block,
-               default: "10.0.0.0/16"
-      variable :enable_dns_support,
-               default: true
-      variable :enable_dns_hostnames,
-               default: true
-
-      # Example resource, custom name
-      resource :my_example_s3_bucket,
-               type: "AWS::S3::Bucket" do |r|
-        #r.depends_on "SomeLogicalResourceName"
-        r.property(:bucket_name) { example_variable }
+      resource :vpc_stack,
+               type: "AWS::CloudFormation::Stack" do |r|
+        r.property(:template_u_r_l) { "vpcstack" }
+        r.property(:timeout_in_minutes) { "5" }
       end
 
-      # Example VPC, creates VPC, IGW, Route, and VPCGatewayAttachment
-      # Settable variables:
-      # - cidr_block (defaults to 10.0.0.0/16)
-      # - enable_dns_support (boolean, default true)
-      # - enable_dns_hostnames (boolean, default true)
-      # - instance_tenancy (`default` or `dedicated`) 
-      resource :my_first,
-               type: RubyCfn::VPC do |r|
-        r.set(:cidr_block) { "10.1.0.0/16" }
-      end
-
-      # Example resource, dynamically generated name
-      resource :my_example_s3_bucket,
-               type: "AWS::S3::Bucket"
-
-      # Multiple resources of the same type
-      resource :my_sqs_queue,
-               amount: 3,
-               type: "AWS::SQS::Queue"
-
-      queue_names = %w(MyFirstQueue MySecondQueue)
-
-      # Multiple resources with index, starts at 0
-      resource :sqs_with_index,
-               amount: 2,
-               type: "AWS::SQS::Queue" do |r, index|
-         r.property(:queue_name) { queue_names[index] }
+      resource :ecs_stack,
+               type: "AWS::CloudFormation::Stack" do |r|
+        r.depends_on %w(VpcStack)
+        r.property(:template_u_r_l) { "ecsstack" }
+        r.property(:parameters) do
+          {
+            "Vpc": "VpcStack".ref("Outputs.<%= name %>Vpc")
+          }
+        end
       end
     end
   end
