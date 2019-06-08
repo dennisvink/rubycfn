@@ -35,9 +35,12 @@ dotenv = render('.env', {
 aws_sdk = render('aws_sdk.rb', {}, path)
 compile = render('compile.rb', {}, path)
 compiler = render('compiler.rb', {}, path)
+core_deploy = render('core_deploy.rb', { name: project_name }, path)
+core_upload = render('core_upload', {}, path)
+core_compile = render('core_compile', {}, path)
+core_diff = render('core_diff', {}, path)
 dependencies = render('dependencies.rb', {}, path)
 deploy = render('deploy.rb', {}, path)
-deploy2 = render('deploy2.rb', { name: project_name }, path)
 dotenv_test = render('.env.test', { name: project_name }, path)
 dotenv_production = render('.env.production', { name: project_name }, path)
 dotenv_rspec = render('.env.rspec', { name: project_name }, path)
@@ -59,7 +62,7 @@ subnets = render('subnets.rb', { name: project_name }, path)
 upload_stack = render('upload_stack.rb', {}, path)
 vpc_stack = render('vpc_stack.rb', { name: project_name }, path)
 vpc_concern = render('vpc_concerns.rb', { name: project_name }, path)
-vpc_spec = render('vpc_spec.rb', { name: project_name }, path)
+vpc_spec = render('vpc_spec.rb', { name: project_name.capitalize }, path)
 
 # Create directory structure
 rubycfn_structure(project_path).each do |dir|
@@ -71,7 +74,10 @@ File.open("#{project_path}/lib/compile.rb", 'w') { |file| file.write(compile) }
 File.open("#{project_path}/lib/aws_helper/compiler.rb", 'w') { |file| file.write(compiler) }
 File.open("#{project_path}/lib/aws_helper/dependencies.rb", 'w') { |file| file.write(dependencies) }
 File.open("#{project_path}/lib/aws_helper/deploy.rb", 'w') { |file| file.write(deploy) }
-File.open("#{project_path}/lib/core/deploy.rb", 'w') { |file| file.write(deploy2) }
+File.open("#{project_path}/lib/core/deploy.rb", 'w') { |file| file.write(core_deploy) }
+File.open("#{project_path}/lib/core/compile.rb", 'w') { |file| file.write(core_compile) }
+File.open("#{project_path}/lib/core/diff.rb", 'w') { |file| file.write(core_diff) }
+File.open("#{project_path}/lib/core/upload.rb", 'w') { |file| file.write(core_upload) }
 File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
 File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
 File.open("#{project_path}/.env.production", 'w') { |file| file.write(dotenv_production) }
