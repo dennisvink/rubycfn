@@ -55,6 +55,7 @@ project_stack = render('project_stack.rb', { name: project_name.capitalize }, pa
 rakefile = render('Rakefile', {}, path)
 shared_methods = render('shared_methods.rb', {}, path)
 spec_helper = render('spec_helper.rb', {}, path)
+subnets = render('subnets.rb', { name: project_name }, path)
 upload_stack = render('upload_stack.rb', {}, path)
 vpc_stack = render('vpc_stack.rb', { name: project_name }, path)
 vpc_concern = render('vpc_concerns.rb', { name: project_name }, path)
@@ -89,6 +90,7 @@ File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", 'w') { |file| fil
 File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
 File.open("#{project_path}/lib/shared_concerns/shared_methods.rb", 'w') { |file| file.write(shared_methods) }
 File.open("#{project_path}/spec/spec_helper.rb", 'w') { |file| file.write(spec_helper) }
+File.open("#{project_path}/lib/stacks/vpc_stack/subnets.rb", 'w') { |file| file.write(subnets) }
 File.open("#{project_path}/lib/aws_helper/upload_stack.rb", 'w') { |file| file.write(upload_stack) }
 File.open("#{project_path}/spec/lib/vpc_spec.rb", 'w') { |file| file.write(vpc_spec) }
 File.open("#{project_path}/lib/stacks/vpc_stack.rb", 'w') { |file| file.write(vpc_stack) }
