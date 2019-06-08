@@ -1,0 +1,40 @@
+require "spec_helper"
+
+require "rubycfn"
+require "active_support/concern"
+
+require_relative "../../lib/main.rb"
+
+module VpcSpec
+  extend ActiveSupport::Concern
+  include Rubycfn
+
+  included do
+    description "VPC Stack RSpec"
+    include Concerns::GlobalVariables
+    include Concerns::SharedMethods
+    include VpcStack::Main
+  end
+end
+
+VpcSpecCfn = include VpcSpec
+
+describe VpcSpec do
+  RspecVpcSpec = VpcSpecCfn.render_template
+  let(:template) { JSON.parse(RspecVpcSpec) }
+
+  context "Renders template" do
+    subject { template }
+    it { should have_key "Resources" }
+
+    context "Has Required Resources" do
+      let(:resources) { template["Resources"] }
+      subject { resources }
+      it { should have_key "<%= name %>InternetGateway" }
+      it { should have_key "<%= name %>Route" }
+      it { should have_key "<%= name %>RouteTable" }
+      it { should have_key "<%= name %>Vpc" }
+      it { should have_key "<%= name %>VpcGatewayAttachment" }
+    end
+  end
+end

@@ -1,1 +1,1 @@
-require_relative "compound/vpc"
+require_relative "../attic/compound/vpc"
