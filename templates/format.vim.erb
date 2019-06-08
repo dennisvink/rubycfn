@@ -1,3 +1,0 @@
-gg=G
-:retab
-ZZ

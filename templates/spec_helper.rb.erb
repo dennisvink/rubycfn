@@ -9,6 +9,8 @@ require "rspec"
 require "rspec/its"
 require "rspec/given"
 
+ENV["ENVIRONMENT"] = "rspec"
+
 RSpec.configure do |config|
   config.color = true
   config.formatter = "documentation"
