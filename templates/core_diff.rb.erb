@@ -1,0 +1,60 @@
+require "diffy"
+require_relative "../aws_helper/main"
+
+env_vars = load_env_vars
+
+set_aws_credentials(
+  env_vars[:aws_region],
+  env_vars[:aws_access_key_id],
+  env_vars[:aws_secret_access_key]
+)
+
+client = Aws::CloudFormation::Client.new
+template = client.get_template(
+  stack_name: "#{ENV["ENVIRONMENT"]}-#{ENV["PROJECT_NAME"]}"
+)
+
+s3 = Aws::S3::Resource.new(region: env_vars[:aws_region])
+orig_template = {}
+
+template = JSON.parse(template.template_body)
+template["Resources"].each do |resource_name, content|
+  if content["Type"] == "AWS::CloudFormation::Stack"
+    stack_name = "#{ENV["PROJECT_NAME"].capitalize}Stack"
+    orig_template[stack_name] = JSON.pretty_generate(
+      JSON.parse(
+        template.to_json
+      )
+    )
+  end
+  next unless content["Type"] == "AWS::CloudFormation::Stack"
+  s3_filename = content["Properties"]["TemplateURL"].split("/").last
+  orig_template[resource_name] = JSON.pretty_generate(
+    JSON.parse(
+      s3.client.get_object(
+        bucket: env_vars[:artifact_bucket],
+        key: s3_filename
+      ).body.read
+    )
+  )
+end
+
+stacks = compile_stacks(true)
+@stack_hashes.each do |stack_name, _hash|
+  new_template = JSON.pretty_generate(
+    JSON.parse(
+      stacks[stack_name]
+    )
+  )
+  diff = Diffy::Diff.new(
+    orig_template[stack_name.to_s], new_template
+  ).to_s(:color)
+
+  if diff.strip.empty?
+    puts "No difference between local #{stack_name} and remote #{stack_name}"
+  else
+    puts "Orig #{stack_name} vs #{stack_name}:"
+    puts diff
+  end
+end
+
