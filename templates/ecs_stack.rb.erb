@@ -1,12 +1,12 @@
-module <%= name %>Stack
+module EcsStack
   extend ActiveSupport::Concern
   include Rubycfn
 
   included do
     include Concerns::GlobalVariables
     include Concerns::SharedMethods
-    include <%= name %>Stack::Parent
+    include EcsStack::EcsCluster
 
-    description generate_stack_description("ParentStack")
+    description generate_stack_description("EcsStack")
   end
 end
