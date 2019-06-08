@@ -60,7 +60,6 @@ vpc_concern = render('vpc_concerns.rb', { name: project_name }, path)
 vpc_spec = render('vpc_spec.rb', { name: project_name }, path)
 
 # Create directory structure
-FileUtils.mkdir_p project_path + '/lib/stacks/' + project_name + '_stack'
 rubycfn_structure(project_path).each do |dir|
   FileUtils.mkdir_p dir
 end
