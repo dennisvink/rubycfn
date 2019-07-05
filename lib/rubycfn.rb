@@ -300,8 +300,14 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
     end
 
-    def self.metadata(metadata)
-      TOPLEVEL_BINDING.eval("@metadata = '#{metadata}'")
+    def self.meta(name, index = 0, &block)
+      if name.class == Symbol
+        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
+      else
+        name = TOPLEVEL_BINDING.eval("'#{name}'")
+      end
+      res = { "#{name}": yield(block) }
+      TOPLEVEL_BINDING.eval("@metadata = @metadata.deep_merge(#{res})")
     end
 
     def self.property(name, index = 0, &block)
@@ -346,7 +352,7 @@ module Rubycfn
           res = {
             "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
               DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
-              Metadata: TOPLEVEL_BINDING.eval("@properties"),
+              Metadata: TOPLEVEL_BINDING.eval("@metadata"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
               Type: arguments[:type],
               Condition: arguments[:condition]
