@@ -11,6 +11,7 @@ require "rubycfn/version"
 @outputs = {}
 @parameters = {}
 @properties = {}
+@metadata = {}
 @mappings = {}
 @conditions = {}
 @AWSresources = {}
@@ -299,6 +300,16 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
     end
 
+    def self.meta(name, index = 0, &block)
+      if name.class == Symbol
+        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
+      else
+        name = TOPLEVEL_BINDING.eval("'#{name}'")
+      end
+      res = { "#{name}": yield(block) }
+      TOPLEVEL_BINDING.eval("@metadata = @metadata.deep_merge(#{res})")
+    end
+
     def self.property(name, index = 0, &block)
       if name.class == Symbol
         name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
@@ -341,6 +352,7 @@ module Rubycfn
           res = {
             "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
               DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
+              Metadata: TOPLEVEL_BINDING.eval("@metadata"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
               Type: arguments[:type],
               Condition: arguments[:condition]
@@ -350,6 +362,7 @@ module Rubycfn
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@properties = {}")
+        TOPLEVEL_BINDING.eval("@metadata = {}")
       end
     end
 
@@ -371,7 +384,7 @@ module Rubycfn
         skeleton.merge!(Conditions: sort_json(TOPLEVEL_BINDING.eval("@conditions")))
         skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@AWSresources")))
         skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-        TOPLEVEL_BINDING.eval("@variables = @AWSresources = @outputs = @properties = @mappings = @parameters = {}")
+        TOPLEVEL_BINDING.eval("@variables = @AWSresources = @outputs = @metadata = @properties = @mappings = @parameters = {}")
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
