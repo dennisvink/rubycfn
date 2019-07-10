@@ -21,6 +21,26 @@ require "rubycfn/version"
 @global_variables = {}
 
 # Monkey patching
+class Symbol
+  def ref(attr = nil)
+    unless attr
+      return { Ref: self.to_s.split("_").map{ |e| e.capitalize }.join }
+    end
+    return { "Fn::GetAtt": [ self.to_s.split("_").map{ |e| e.capitalize }.join, attr ] }
+  end
+end
+
+class Hash
+  def fnsplit(separator = "")
+    {
+      "Fn::Split": [
+        separator,
+        self
+      ]
+    }
+  end
+end
+
 class String
   def cfnize
     return self if self !~ /_/ && self =~ /[A-Z]+.*/
