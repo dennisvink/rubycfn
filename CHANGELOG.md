@@ -2,10 +2,13 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.5 (Next Release)
-  * Added spec helper as require_relative to specss
-  * Allow .fnsplit to be chained to .fnjoin
-  * Allow .ref to be chained to Hash
+## 0.3.6 (Next Release)
+
+## 0.3.5
+
+  * Added spec helper as require_relative to specss -- [@dennisvink][@dennisvink]
+  * Allow .fnsplit to be chained to .fnjoin -- [@dennisvink][@dennisvink]
+  * Allow .ref to be chained to Hash -- [@dennisvink][@dennisvink]
 
 ## 0.3.4
 
