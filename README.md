@@ -3,6 +3,8 @@
 [RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation, Deployment Manager and ARM DSL to make expressing
 AWS templates as Ruby code a bit more pleasing to the eye.
 
+You can find the [CloudFormation Compiler](https://rubycfn.com/) at https://rubycfn.com with examples.
+
 Note, as of 0.3.3 the default project structure changed quite a bit. The README.md does not reflect
 those changes yet. A rubycfn project is now provisioned with a nested stack set up, and includes
 a nested VPC and a nested ECS stack.
