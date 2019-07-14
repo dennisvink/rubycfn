@@ -22,7 +22,7 @@ __________ ____ __________________.___._________ _____________________
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
  |    |   \    |  / |    |   \\____   |\     \____|     \    |    |   \
  |____|_  /______/  |______  // ______| \______  /\___  /    |______  /
-        \/                 \/ \/               \/     \/            \/ [v0.3.5]
+        \/                 \/ \/               \/     \/            \/ [v0.3.6]
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
@@ -229,6 +229,31 @@ For example:
         r.property(:name) { "MyAwesomeBucket#{index+1}" }
       end
 ```
+
+## Generating CloudFormation using the Rubycfn CLI
+
+It is not necessary to start a Rubycfn project to generate CloudFormation templates.
+The examples from the [Rubycfn CloudFormation Compiler](https://rubycfn.com/) can be used with the Rubycfn cli directly.
+Take this `template.rb` as an example:
+
+```ruby
+parameter :bucket_name,
+          description: "Bucket name"
+
+resource :foobar,
+         type: "AWS::S3::Bucket" do |r|
+  r.property(:name) { :bucket_name.ref }
+end
+```
+
+You can generate a CloudFormation template from this script in the following ways:
+`cat template.rb | rubycfn`
+
+or
+
+`rubycfn template.rb`
+
+Both commands will output the CloudFormation template without the need for you to set up a project.
 
 ## Implemented AWS functions
 
