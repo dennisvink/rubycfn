@@ -19,6 +19,7 @@ if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)
       end
       contents = contents.join("\n")
     else
+      raise "File #{ARGV.first} not found!" unless File.file?(ARGV.first)
       contents = File.read(ARGV.first)
     end
     extend ActiveSupport::Concern
