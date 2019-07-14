@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.6 (Next Release)
+## 0.3.7 (Next Release)
+
+## 0.3.6
+
+  * Added STDIN pipe to rubycfn cli and file name argument support -- [@dennisvink][@dennisvink]
 
 ## 0.3.5
 
