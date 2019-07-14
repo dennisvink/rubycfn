@@ -8,6 +8,30 @@ require "rubycfn/version"
 
 require_relative "../lib/cli_methods"
 
+if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?))
+  require "rubycfn"
+  require "active_support/concern"
+  module RubycfnStack
+    if (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?))
+      contents = []
+      ARGF.each_line do |line|
+        contents.push(line)
+      end
+      contents = contents.join("\n")
+    else
+      contents = File.read(ARGV.first)
+    end
+    extend ActiveSupport::Concern
+    include Rubycfn
+    included do
+      eval(contents)
+    end
+  end
+  cfn = include RubycfnStack
+  puts cfn.render_template
+  exit
+end
+
 path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts rubycfn_banner(Rubycfn::VERSION)
 prompt = TTY::Prompt.new
