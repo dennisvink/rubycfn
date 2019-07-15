@@ -1,20 +1,59 @@
 # RubyCfn
 
-[RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation, Deployment Manager and ARM DSL to make expressing
+[RubyCfn](https://rubycfn.com/) is a light-weight tiny CloudFormation, and Deployment Manager to make expressing
 AWS templates as Ruby code a bit more pleasing to the eye.
 
 You can find the [CloudFormation Compiler](https://rubycfn.com/) at https://rubycfn.com with examples.
 
-Note, as of 0.3.3 the default project structure changed quite a bit. The README.md does not reflect
-those changes yet. A rubycfn project is now provisioned with a nested stack set up, and includes
-a nested VPC and a nested ECS stack.
+## Philosophy
+
+Standardisation is key to keep your engineering team agile. Time spent on projects that deviate from a standard implementation is time taken away from delivering value. Custom implementations are detrimental to a team’s velocity and scalability. It hinders knowledge sharing as a select few have knowledge about the specifics of such a custom implementation, and because the wheel is reinvented many times over proper testing is tedious at best. We’ve automated best practices and ensured that new projects automatically incorporate our principles. Our tooling has been built with cloud engineer happiness in mind.
 
 ## Quick start
 
 Install Rubycfn:
-`gem install rubycfn`
+```
+gem install rubycfn
+echo "resource :my_s3_bucket, type: 'AWS::S3::Bucket'" | rubycfn
+```
 
-Starting a new Rubycfn project:
+The Rubycfn CLI can be piped to or takes a file name as argument. You can start
+by cloning the [Rubycfn Examples Repository](https://github.com/dennisvink/rubycfn-examples/). To generate a CloudFormation template type:
+
+`cat "3. Deploying a Serverless function.rb" | rubycfn`
+
+or
+
+`rubycfn "3. Deploying a Serverless function.rb"`
+
+to generate the CloudFormation template for that example.
+
+Now take this `template.rb` as an example:
+
+```ruby
+parameter :bucket_name,
+          description: "Bucket name"
+
+resource :foobar,
+         type: "AWS::S3::Bucket" do |r|
+  r.property(:name) { :bucket_name.ref }
+end
+```
+
+You can generate a CloudFormation template from this script in the following ways:
+`cat template.rb | rubycfn`
+
+or
+
+`rubycfn template.rb`
+
+Both commands will output the CloudFormation template without the need for you to set up a project.
+
+## Setting up a Rubycfn project
+
+For projects that extend beyond a simnple stack or those that require unit
+testing you can create a Rubycfn project in the following way:  
+
 `rubycfn`
 ```$ rubycfn
 __________ ____ __________________.___._________ _____________________
@@ -27,6 +66,8 @@ Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
 ```
+
+## Project commands
 
 Installing project dependencies:
 `bundle`
@@ -52,212 +93,229 @@ Checking difference between local and remote stack:
 Deploying stack to AWS:
 `rake apply`
 
-## Philosophy
+## Anatomy of a Rubycfn project
 
-Standardisation is key to keep your engineering team agile. Time spent on projects that deviate from a standard implementation is time taken away from delivering value. Custom implementations are detrimental to a team’s velocity and scalability. It hinders knowledge sharing as a select few have knowledge about the specifics of such a custom implementation, and because the wheel is reinvented many times over proper testing is tedious at best. We’ve automated best practices and ensured that new projects automatically incorporate our principles. Our tooling has been built with cloud engineer happiness in mind.
+A new Rubycfn project has the following structure:
 
-## Overview of Rubycfn
+```
+total 112
+drwxr-xr-x  14 dennis  staff    448 Jul 15 20:43 .
+drwxr-xr-x  17 dennis  staff    544 Jul 15 20:43 ..
+-rw-r--r--   1 dennis  staff     92 Jul 15 20:43 .env
+-rw-r--r--   1 dennis  staff    325 Jul 15 20:43 .env.production
+-rw-r--r--   1 dennis  staff    207 Jul 15 20:43 .env.rspec
+-rw-r--r--   1 dennis  staff    298 Jul 15 20:43 .env.test
+drwxr-xr-x  10 dennis  staff    320 Jul 15 20:43 .git
+-rw-r--r--   1 dennis  staff   1344 Jul 15 20:43 .rubocop.yml
+-rw-r--r--   1 dennis  staff    502 Jul 15 20:43 Gemfile
+-rw-r--r--   1 dennis  staff  27158 Jul 15 20:43 Gemfile.lock
+-rw-r--r--   1 dennis  staff    998 Jul 15 20:43 Rakefile
+drwxr-xr-x   2 dennis  staff     64 Jul 15 20:43 build
+drwxr-xr-x   7 dennis  staff    224 Jul 15 20:43 lib
+drwxr-xr-x   4 dennis  staff    128 Jul 15 20:43 spec
+```
 
-RubyCfn is an abstraction layer around several Cloud templates such as CloudFormation (AWS). Rubycfn projects are set up for easy grouping of resources that have a mutual cohesion, and structured in such a way to make it easy for developers to quickly find what they need. Rubycfn is a so-called ‘DSL’ on top of these template formats and presents templates as code that is friendly to the eye and easy to read and understand. In addition of being an alternate representation of a template, Rubycfn allows you to combine template generation with programming logic making it far more versatile than what AWS offers in their templates. Last but not least Rubycfn enforces code quality by testing the generated templates against unit tests, checking if the expected resources and their configuration matches with what was actually generated, and by LINTing the templates and the underlying code that generates the templates.
+Lets first discuss the files in the root folder.
 
-Out of the box Rubycfn comes with a CI/CD pipeline. It’s a serverless pipeline running on Amazon Web Services (AWS), which you can fully configure using the complimentary `buildspec.yml`.  The CI/CD pipeline is linked to a Github repository, and a change in this repository triggers the CI/CD pipeline to execute the steps you’ve defined in the buildspec.yml.
+```
+.env            Global environment variables, available in every environment
+.env.production Environment variables available in production environment
+.env.test       Environment variables available in test environment
+.env.rspec      Environment variables available to unit tests
+.rubocop.yml    Ruby LINTer configuration to enforce good code style
+Gemfile         Ruby gem dependencies
+Gemfile.lock    Resolved gem dependencies
+Rakefile        Contains all Rubycfn rake tasks
+```
 
-Typically a commit to your application GIT repository triggers the build process and the following things happen:
-- Application code is checked out
-- Infrastructure as code (Rubycfn project) is checked out
-- Rubycfn project is ‘built’, kicking off unit tests against the underlying code, and against the resulting build artifact (template(s))
-- Application (unit) tests are ran
-- The build artifact is stored (versioned), so you can use it as input for your delivery pipeline
-- The artifact may or may not include the application code. A part of the build process could - for example - also be that the application is dockerized and pushed to a docker registry.
-- The resulting artifact is the complete recipe to deploy the application and associated resources to AWS
+#### .env
 
-## Example code
+The `.env` file contains environment variables that are available, regardless of
+the environment you're building for. For example:
 
-You can find stack examples at [https://github.com/dennisvink/rubycfn-example](https://github.com/dennisvink/rubycfn-example/)
+```
+AWS_ACCOUNT_ID="1234567890"
+AWS_REGION="eu-west-1"
+ENVIRONMENT="rspec"
+PROJECT_NAME="sample"
+```
 
-## Installing Gems
+#### .env.production and .env.test
 
-Type `bundle install` to install all dependencies that are listed in the Gemfile.
+The `.env.production` and `.env.test` files contain environment variables that
+are specific to production or test respectively. For example `.env.test` can
+contain something like this:
 
-## Running specs
+```
+# ENV vars for test environment
+CLOUD_TRAIL_MONITOR_SNS_RECIPIENTS="changeme@example.com,changemetoo@example.com"
+ROOT_MONITOR_SNS_RECIPIENTS="changeme@example.com,changemetoo@example.com"
+VPC_CIDR_BLOCK="10.100.0.0/16"
+ARTIFACT_BUCKET="my-awesome-cloudformation-artifact-bucket"
+STACK_NAME="test"
+```
 
-Type `rake` to run the tests. It tests if RubyCfn creates a valid
-CloudFormation stack.
+While .env.production can look something like this:
 
-## Example usage
+```
+# ENV vars for production environment
+CLOUD_TRAIL_MONITOR_SNS_RECIPIENTS="changeme@example.com,changemetoo@example.com"
+ROOT_MONITOR_SNS_RECIPIENTS="changeme@example.com,changemetoo@example.com"
+VPC_CIDR_BLOCK="10.200.0.0/16"
+ARTIFACT_BUCKET="my-awesome-cloudformation-artifact-bucket-for-production"
+STACK_NAME="production"
+```
+
+You can reuse these environment variables in your project code.
+
+#### .env.rspec
+
+The `.env.rspec` is used when running unit tests. It contains mock variables
+so that you can test the resulting CloudFormation templates properly.
+
+#### The missing .env.private file
+
+There is one file that is not generated by default but does need mentioning:
+the `.env.private` file. This is a special file that allows you to override
+environment variables. An environment variable set in .env.private always takes
+precedence over environment variables set in other .env* files.
+
+#### .rubocop.yml
+
+The `.rubocop.yml` file contains configuration for the code linter. When running
+`rubocop` from the root folder of your project it will error on code style
+violations.
+
+### Rubycfn project directories
+
+As shown before, a Rubycfn project contains three directories:
+
+```
+drwxr-xr-x   2 dennis  staff     64 Jul 15 20:43 build
+drwxr-xr-x   7 dennis  staff    224 Jul 15 20:43 lib
+drwxr-xr-x   4 dennis  staff    128 Jul 15 20:43 spec
+```
+
+#### build
+
+The build directory is where your resulting CloudFormation templates will be
+stored.
+
+#### lib
+
+The 'lib' directory contains all your stacks, modules and project libraries.
+This directory is the most important, as this is the directory where you work
+in. I will go into more detail on the `lib` directory in the next chapter.
+
+#### spec
+
+The `spec` directory contains all unit tests. They are executed with the
+`rake spec` command.
+
+## The lib directory
+
+As mentioned the `lib` directory is the most important directory. When you
+create a Rubycfn project it will contain the following by default:
+
+```
+total 8
+drwxr-xr-x   7 dennis  staff  224 Jul 15 20:43 .
+drwxr-xr-x  16 dennis  staff  512 Jul 15 21:08 ..
+drwxr-xr-x   9 dennis  staff  288 Jul 15 20:43 aws_helper
+drwxr-xr-x   6 dennis  staff  192 Jul 15 20:43 core
+-rw-r--r--   1 dennis  staff  734 Jul 15 20:43 main.rb
+drwxr-xr-x   5 dennis  staff  160 Jul 15 20:43 shared_concerns
+drwxr-xr-x   8 dennis  staff  256 Jul 15 20:43 stacks
+```
+
+The `aws_helper` and `core` directories and the `main.rb` file contains helper
+function and a lot of glue to make Rubycfn code compile and deploy. You should
+never need to touch those files. In this section I'll focus on the
+`shared_concerns` directory and the `stacks` directory.
+
+To understand the purpose of the `shared_concerns` directory it's important to
+understand that a stack consists of a parent stack file and modules. Lets say
+you have a VPC stack: It will consist of a `vpc_stack.rb` file that includes
+modules from the `vpc_stack/` directory. This modular approach keeps your
+projects nice and tidy. By default, the shared_concerns directory contains a
+global variables module, a shared methods module and a helper methods module.
+
+The `shared_concerns/` directory also contain modules. The difference is that
+these modules can be used in more than one stack. If you have resources or code
+that you want to reuse cross stacks, create a shared concern.
+
+The `stacks` folder, by default, contains the following:
+
+```
+total 24
+drwxr-xr-x  8 dennis  staff  256 Jul 15 20:43 .
+drwxr-xr-x  7 dennis  staff  224 Jul 15 20:43 ..
+drwxr-xr-x  3 dennis  staff   96 Jul 15 20:43 ecs_stack
+-rw-r--r--  1 dennis  staff  254 Jul 15 20:43 ecs_stack.rb
+drwxr-xr-x  3 dennis  staff   96 Jul 15 20:43 parent_stack
+-rw-r--r--  1 dennis  staff  259 Jul 15 20:43 parent_stack.rb
+drwxr-xr-x  4 dennis  staff  128 Jul 15 20:43 vpc_stack
+-rw-r--r--  1 dennis  staff  248 Jul 15 20:43 vpc_stack.rb
+```
+
+The default project creates three CloudFormation templates: a VPC stack, an
+ECS stack and a parent stack. The parent stack is a CloudFormation stack that
+contains all other stacks. When you deploy a Rubycfn project these other stacks
+show up as `nested stacks`. The parent stack acts not only as a container for
+all other stacks, but is also responsible for passing outputs from stacks as
+parameters to another. For example: The VPC Id that is created in the VPC stack
+can easily be passed to the ECS stack as a parameter. This nested stack approach
+has an additional benefit: A change of output in stack X can trigger an update
+in stack Y.
+
+The .rb files you see in the lib/stacks/ directory are the parent stack files.
+Lets have a look at `vpc_stack.rb`:
 
 ```ruby
-require "rubycfn"
-
-module DnsStack
+module VpcStack
   extend ActiveSupport::Concern
   include Rubycfn
 
   included do
-    parameter :domain_name,
-              default: "example.com",
-              description: "Domain name for the HostedZone"
+    include Concerns::GlobalVariables
+    include Concerns::SharedMethods
+    include VpcStack::Main
 
-    resource :hosted_zone,
-               type: "AWS::Route53::HostedZone" do |r|
-      r.property(:hosted_zone_config) do
-        {
-          Comment: [
-            "Hosted Zone for ",
-            "DomainName".ref
-          ].fnjoin
-        }
-      end
-      r.property(:name) { "DomainName".ref }
-    end
-
-    resource :hosted_zone_ses,
-             amount: 1,
-             type: "AWS::SES::ConfigurationSet" do |r|
-      r.depends_on "HostedZone"
-      r.property(:name) { ["HostedZone".ref, "_SESConfigurationSet"].fnjoin }
-    end
-
-    output :hosted_zone_id,
-           value: "HostedZone".ref,
-           description: "HostedZoneId",
-           export: {
-             "Name": ["AWS::StackName".ref, "HostedZoneId"].fnjoin(":")
-           }
-
+    description generate_stack_description("VpcStack")
   end
 end
-
-MyDemoStack = include DnsStack
-puts MyDemoStack.render_template
-
 ```
 
-The above code renders into this CloudFormation template:
+On the first line we define the module name. It is important that the module
+name ends with 'Stack' to make the compiler magic work. The code between
+`include do` and `end` loads in two of the shared concerns, and includes the
+VpcStack::Main module. Finally the description of the stack is set.
 
-```json
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Parameters": {
-    "DomainName": {
-      "Default": "example.com",
-      "Description": "Domain name for the HostedZone",
-      "Type": "String"
-    }
-  },
-  "Resources": {
-    "HostedZone": {
-      "Properties": {
-        "HostedZoneConfig": {
-          "Comment": {
-            "Fn::Join": [
-              "",
-              [
-                "Hosted Zone for ",
-                {
-                  "Ref": "DomainName"
-                }
-              ]
-            ]
-          }
-        },
-        "Name": {
-          "Ref": "DomainName"
-        }
-      },
-      "Type": "AWS::Route53::HostedZone"
-    },
-    "HostedZoneSes": {
-      "DependsOn": [
-        "HostedZone"
-      ],
-      "Properties": {
-        "Name": {
-          "Fn::Join": [
-            "",
-            [
-              {
-                "Ref": "HostedZone"
-              },
-              "_SESConfigurationSet"
-            ]
-          ]
-        }
-      },
-      "Type": "AWS::SES::ConfigurationSet"
-    }
-  },
-  "Outputs": {
-    "HostedZoneId": {
-      "Description": "HostedZoneId",
-      "Export": {
-        "Name": {
-          "Fn::Join": [
-            ":",
-            [
-              {
-                "Ref": "AWS::StackName"
-              },
-              "HostedZoneId"
-            ]
-          ]
-        }
-      },
-      "Value": {
-        "Ref": "HostedZone"
-      }
-    }
-  }
-}
-```
-
-I've deliberately added amount: 1 to the hosted_zone_ses resources, which is not
-necessary as this defaults to 1 if you omit it. If you want multiple resources of
-the same type just increase the amount. The resource names will be enumerated,
-e.g. Resource, Resource2, Resource3, etc.
-
-With |r, index| you will be have to access the index number of the generated
-resource in the `index` variable.
-
-For example:
+The `lib/stacks/vpc_stack/` directory contains a `vpc.rb` file, which is the
+implementation of the VpcStack::Main module:
 
 ```ruby
-      resource :my_s3_bucket,
-               amount: 10,
-               type: "AWS::S3::Bucket" do |r, index|
+require_relative "subnets"
 
-        r.property(:name) { "MyAwesomeBucket#{index+1}" }
-      end
-```
+module VpcStack
+  module Main
+    extend ActiveSupport::Concern
 
-## Generating CloudFormation using the Rubycfn CLI
-
-It is not necessary to start a Rubycfn project to generate CloudFormation templates.
-The examples from the [Rubycfn CloudFormation Compiler](https://rubycfn.com/) can be used with the Rubycfn cli directly.
-Take this `template.rb` as an example:
-
-```ruby
-parameter :bucket_name,
-          description: "Bucket name"
-
-resource :foobar,
-         type: "AWS::S3::Bucket" do |r|
-  r.property(:name) { :bucket_name.ref }
+    included do
+      # A lot of VPC code here
+    end
+  end
 end
 ```
 
-You can generate a CloudFormation template from this script in the following ways:
-`cat template.rb | rubycfn`
+The first line is identical to the parent stack file and defines this module is
+part of `VpcStack`. The second line defines the name of the module, in this case
+`Main`. The code beteen `included do` and `end` is the implementation of this
+module.
 
-or
+## AWS Intrinsic functions
 
-`rubycfn template.rb`
-
-Both commands will output the CloudFormation template without the need for you to set up a project.
-
-## Implemented AWS functions
-
-You can Ref by postpending the .ref method to any string. E.g. "string".ref
+You can Ref by postpending the .ref method to any string or hash, e.g. :foobar.ref
 If you supply an argument to .ref it'll be rendered as Fn::GetAtt. Last but
 not least, calling Fn::Join is achieved by postpending .fnjoin to an array.
 You can provide it with an argument for the separator. By default its "".
@@ -274,144 +332,6 @@ or...
 
 Paste the CloudFormation output in [cfnflip.com](https://cfnflip.com/) to
 convert it to YAML format ;)
-
-## The anatomy of a Rubycfn project
-
-When you start a new Rubycfn project it comes structured out of the box. We standardise this structure so that it’s uniform from project to project. A colleague Cloud Engineer needs to be able to take over or troubleshoot a project immediately without having to learn the inner working of the project first. This allows us to remain agile. In addition, by not having to rely on pre-existing knowledge about a project (and thus having knowledge of a project with just a few select people), we promote synergy.
-
-You start a new project by typing `rubycfn` at the prompt. This will ask you a couple of questions about the project - such as the project’s name. The entire project is then generated for you. It then looks like this:
-
--rw-r--r--   1 binx  staff   166 Oct 17 16:06 .env
--rw-r--r--   1 binx  staff    81 Oct 17 16:06 .env.test
--rw-r--r--   1 binx  staff   246 Oct 17 16:06 Gemfile
--rw-r--r--   1 binx  staff   346 Oct 17 16:06 Rakefile
-drwxr-xr-x   2 binx  staff    64 Oct 17 16:06 build
-drwxr-xr-x   3 binx  staff    96 Oct 17 16:06 config
--rw-r--r--   1 binx  staff    15 Oct 17 16:06 format.vim
-drwxr-xr-x   6 binx  staff   192 Oct 17 16:06 lib
-drwxr-xr-x   4 binx  staff   128 Oct 17 16:06 spec
-
-First the flat files:
-
-`.env` and `.env.test` are files where you store environment variables that you may want to use in your project code. The difference between the .env and the .env.test file is that the .env file is the “global” environment variable file, whereas the .env.test file is an environment-specific environment variable file, that can override values you’ve specified in your .env file (or add new environment variables, for that matter). You’d typically have a .env.test, .env.acceptance and a .env.production file for things like instance sizing.
-
-Example:
-```$ cat .env.test
-# ENV vars for test environment
-APPLICATION_INSTANCE_CLASS="t2.micro"
-```
-
-To make use of - for example - .env.production as source, you can either override the ENVIRONMENT variable in the .env file, setting it to production, or you can invoke rake as: `ENVIRONMENT="production" rake`.
-
-The `Gemfile` is a collection of Ruby dependencies. By running `bundle` you install the dependencies.
-
-The `Rakefile` contain the tasks that are performed when you type the `rake` command. It consists of a `compile` task and a `spec` task. You can invoke the tasks individually by typing `rake compile` or `rake spec`, but by default the `spec` task is ran first, and then the `compile` task. A “spec” is another word for unit test. It’s important to run the unit test first, so that if a test fails no template is generated. If you just run `rake` both tasks are executed sequentially, provided the specs throw no error.
-
-Onto the subdirectories:
-
-The `build` directory is where all the compiled templates end up.
-
-Example:
-```
-$ ls -al build/
-total 24
-drwxr-xr-x   4 binx  staff   128 Oct 17 16:27 .
-drwxr-xr-x  16 binx  staff   512 Oct 17 16:27 ..
--rw-r--r--   1 binx  staff  4152 Oct 17 16:27 test-aws-demostack.json
-```
-
-The `spec` directory is where your unit tests live. These are not your application unit tests. A Rubycfn project lives in another universe than your application code. These unit tests test your expectations of the generated templates against reality. Such tests typically check for the existence and absence of particular resources, and values of properties. The tests are always executed when you run the `rake` command or the `rake spec` command. By default a project comes with unit tests that amongst other things check for the generation of the CI/CD pipeline and if it’s been configured correctly.
-
-Example:
-```
-      context "Codebuild Service Role" do
-        let(:code_build_service_role) { resources["CodeBuildDemoServiceRole"] }
-        subject { code_build_service_role }
-
-        it { should have_key "Properties" }
-
-        context "Code build service role properties" do
-          let(:code_build_service_role_properties) { code_build_service_role["Properties"] }
-          subject { code_build_service_role_properties }
-
-          it { should have_key "AssumeRolePolicyDocument" }
-          it { should have_key "Path" }
-          it { should have_key "Policies" }
-
-          context "Code build service role policy document" do
-            let(:policy_document) { code_build_service_role_properties["Policies"][0]["PolicyDocument"] }
-            subject { policy_document }
-
-            it { should have_key "Statement" }
-
-            context "Code build service role actions" do
-              let(:statement) { policy_document["Statement"][0]["Action"] }
-              subject { statement }
-
-              it { should eq %w(logs:CreateLogGroup logs:CreateLogStream logs:PutLogEvents) }
-            end
-          end
-        end
-      end
-```
-
-The `config` directory contains your buildspec.yml, which contain all the instructions for the build pipeline. It’s also possible to source the buildspec.yml from another source, such as the application repository.
-
-And finally, the `lib` directory contains all the relevant project code. The `lib` directory consists of several files and directories. The `lib/main.rb` is the bootstrapper that ties everything together. The `lib/compile.rb` is responsible for compiling the templates and writing them to the build directory.
-
-There are two directories under `lib`, namely `shared_concerns` and `stacks`. Concerns in this context simply mean Modules. Rubycfn relies on the ActiveConcern gem which makes modularisation of code very easy. The `shared_concerns` directory contains modules that can be used by several stacks. By default it has a `global_variables` module containing the following:
-
-```
-module Concerns
-  module GlobalVariables
-    extend ActiveSupport::Concern
-
-    included do
-      variable :environment,
-               default: "test",
-               global: true,
-               value: ENV["ENVIRONMENT"]
-    end
-  end
-end
-```
-This module exposes a variable `environment`, which defaults to `test` if not set. It sources the value from the ENVIRONMENT environment variable. This variable can be used throughout your project at any place you see fit.
-
-The `stacks` directory is a container for all stacks that you want to generate. There is no limitation to the amount of stacks that it supports. By default, it comes with a single stack for your project:
-
-Example `lib/stacks/demo_stack.rb`:
-```
-module DemoStack
-  extend ActiveSupport::Concern
-  include Rubycfn
-
-  included do
-    include DemoStack::Main
-    include DemoStack::CICD
-  end
-end
-```
-Our stack file consists of two modules: Main and CICD. When compiling the code, the combined result of the Main and CICD module will be written to the DemoStack json file in the build/ directory. Modularising stacks allows for separation of code by cohesion or any other logic you deem appropriate.
-
-The stacks directory also contains a directory that is named the same, minus the .rb extension: `lib/stacks/demo_stack/`
-
-All the stack modules live inside this directory. The modules that make up the stack are the actual implementation of the resources, parameters and outputs.
-
-An example of such a module:
-```
-module DemoStack
-  module Main
-    extend ActiveSupport::Concern
-    included do
-
-      resource :api_gateway_rest_api,
-        type: "AWS::ApiGateway::RestApi" do |r|
-        r.property(:name) { "#{environment}-webhook" }
-      end
-    end
-  end
-end
-```
 
 ## Serverless Transforms
 
