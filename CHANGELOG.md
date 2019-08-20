@@ -2,7 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.7 (Next Release)
+## 0.3.8 (Next Release)
+
+## 0.3.7
+
+  * Allow symbols to be passed to Ref as argument for Fn::GetAtt -- [@dennisvink][@dennisvink]
+  * Added .gitignore to default project template -- [@dennisvink][@dennisvink]
 
 ## 0.3.6
 
