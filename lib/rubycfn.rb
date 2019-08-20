@@ -26,6 +26,7 @@ class Symbol
     unless attr
       return { Ref: self.to_s.split("_").map{ |e| e.capitalize }.join }
     end
+    attr = attr.class == String ? attr : attr.to_s.split('_').map{|e| e.capitalize}.join
     return { "Fn::GetAtt": [ self.to_s.split("_").map{ |e| e.capitalize }.join, attr ] }
   end
 end
@@ -51,6 +52,7 @@ class String
     unless attr
       return { Ref: self }
     end
+    attr = attr.class == String ? attr : attr.to_s.split('_').map{|e| e.capitalize}.join
     return { "Fn::GetAtt": [ self, attr ] }
   end
 
