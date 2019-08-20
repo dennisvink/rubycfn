@@ -71,6 +71,7 @@ dotenv_rspec = render('.env.rspec', { name: project_name }, path)
 ecs_stack = render('ecs_stack.rb', {}, path)
 ecs_stack_concern = render('ecs_Stack_concern.rb', { name: project_name }, path)
 gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
+gitignore = render('.gitignore', {}, path)
 global_variables = render('global_variables.rb', { name: project_name.downcase }, path)
 helpers = render('helpers.rb', {}, path)
 helper_methods = render('helper_methods.rb', {}, path)
@@ -109,6 +110,7 @@ File.open("#{project_path}/.env.rspec", 'w') { |file| file.write(dotenv_rspec) }
 File.open("#{project_path}/lib/stacks/ecs_stack.rb", 'w') { |file| file.write(ecs_stack) }
 File.open("#{project_path}/lib/stacks/ecs_stack/ecs_cluster.rb", 'w') { |file| file.write(ecs_stack_concern) }
 File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
+File.open("#{project_path}/.gitignore", 'w') { |file| file.write(gitignore) }
 File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |file| file.write(global_variables) }
 File.open("#{project_path}/lib/aws_helper/helpers.rb", 'w') { |file| file.write(helpers) }
 File.open("#{project_path}/lib/shared_concerns/helper_methods.rb", 'w') { |file| file.write(helper_methods) }
