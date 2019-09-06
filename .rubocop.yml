@@ -1,0 +1,114 @@
+AllCops:
+  TargetRubyVersion: 2.3
+  
+  DisplayCopNames: true
+  Include:
+    - "Gemfile"
+    - "Rakefile"
+    - "bin/*"
+    - "*.gemspec"
+    - "lib/**/*.rb"
+  Exclude:
+    - "lib/core/monkeypatch.rb"
+    - "test/**/*.rb"
+    - "spec/**/*.rb"
+    - "attic/**/*"
+
+Metrics/AbcSize:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/ClassLength:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/CyclomaticComplexity:
+  Max: 40
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/PerceivedComplexity:
+  Max: 40
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: space
+
+Metrics/LineLength:
+  Max: 500
+  Exclude:
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/ModuleLength:
+  Max: 500
+
+Metrics/MethodLength:
+  Max: 40
+
+Metrics/BlockLength:
+  Max: 500
+
+Performance/Casecmp:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/Next:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Security/MarshalLoad:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    default: '()'
+    '%i':    '()'
+    '%w':    '()'
+
+Style/Alias:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/ExpandPathArguments:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/DateTime:
+  Enabled: false
+
+Style/MissingRespondToMissing:
+  Enabled: false
+
+Style/NestedTernaryOperator:
+  Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/RescueStandardError:
+  EnforcedStyle: "implicit"
