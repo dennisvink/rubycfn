@@ -2,7 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.8 (Next Release)
+## 0.3.9 (Next Release)
+
+## 0.3.8
+
+  * Added Fn::Transform intrinsic function `.fntransform` -- [@dennisvink][@dennisvink]
+  * Refactored some code -- [@dennisvink][@dennisvink]
 
 ## 0.3.7
 
