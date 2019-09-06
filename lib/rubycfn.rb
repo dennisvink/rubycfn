@@ -32,6 +32,16 @@ class Symbol
       ]
     }
   end
+
+  def fntransform(parameters = nil)
+    raise "fntransform parameters must be of type Hash" unless parameters.class == Hash
+    {
+      "Fn::Transform": {
+        "Name": to_s.split("_").map(&:capitalize).join,
+        "Parameters": parameters
+      }
+    }
+  end
 end
 
 class Hash
@@ -61,6 +71,16 @@ class String
         self,
         attr
       ]
+    }
+  end
+
+  def fntransform(parameters = nil)
+    raise "fntransform parameters must be of type Hash" unless parameters.class == Hash
+    {
+      "Fn::Transform": {
+        "Name": self,
+        "Parameters": parameters
+      }
     }
   end
 
