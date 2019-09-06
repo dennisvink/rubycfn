@@ -1,18 +1,20 @@
 #!/usr/bin/env ruby
 
 require "erb"
-require 'fileutils'
-require 'ostruct'
+require "fileutils"
+require "ostruct"
 require "tty-prompt"
 require "rubycfn/version"
 
 require_relative "../lib/cli_methods"
 
-if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?))
+# rubocop:disable Style/AndOr
+if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)) # rubocop:disable Style/Not
   require "rubycfn"
   require "active_support/concern"
   module RubycfnStack
-    if (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?))
+    if ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?) # rubocop:disable Style/Not
+      # rubocop:enable Style/AndOr
       contents = []
       ARGF.each_line do |line|
         contents.push(line)
@@ -25,10 +27,10 @@ if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)
     extend ActiveSupport::Concern
     include Rubycfn
     included do
-      eval(contents)
+      eval(contents) # rubocop:disable Security/Eval
     end
   end
-  cfn = include RubycfnStack
+  cfn = include RubycfnStack # rubocop:disable Style/MixinUsage
   puts cfn.render_template
   exit
 end
@@ -37,97 +39,98 @@ path = File.expand_path(File.dirname(File.dirname(__FILE__)))
 puts rubycfn_banner(Rubycfn::VERSION)
 prompt = TTY::Prompt.new
 
-project_name = prompt.ask('Project name?', default: 'example') do |q|
-  q.validate(/^([a-z0-9]*)$/, 'Invalid project name')
+project_name = prompt.ask("Project name?", default: "example") do |q|
+  q.validate(/^([a-z0-9]*)$/, "Invalid project name")
 end
 
-project_path = project_name + '-rubycfn'
+project_path = project_name + "-rubycfn"
 
-account_id = prompt.ask('AWS Account ID?', default: '1234567890') do |q|
-  q.validate(/^([0-9]*)$/, 'Invalid account id')
+account_id = prompt.ask("AWS Account ID?", default: "1234567890") do |q|
+  q.validate(/^([0-9]*)$/, "Invalid account id")
 end
 
 region = prompt.select(
   "Select AWS region", aws_regions
 )
 
-dotenv = render('.env', {
-  :project_name => project_name,
-  :account_id => account_id,
-  :region => region
-}, path)
+render_args = {
+  project_name: project_name,
+  account_id: account_id,
+  region: region
+}
 
-aws_sdk = render('aws_sdk.rb', {}, path)
-compiler = render('compiler.rb', {}, path)
-core_deploy = render('core_deploy.rb', { name: project_name }, path)
-core_upload = render('core_upload.rb', {}, path)
-core_compile = render('core_compile.rb', {}, path)
-core_diff = render('core_diff.rb', {}, path)
-dependencies = render('dependencies.rb', {}, path)
-deploy = render('deploy.rb', {}, path)
-dotenv_test = render('.env.test', { name: project_name }, path)
-dotenv_production = render('.env.production', { name: project_name }, path)
-dotenv_rspec = render('.env.rspec', { name: project_name }, path)
-ecs_stack = render('ecs_stack.rb', {}, path)
-ecs_stack_concern = render('ecs_Stack_concern.rb', { name: project_name }, path)
-gemfile = render('Gemfile', { version: Rubycfn::VERSION }, path)
-gitignore = render('.gitignore', {}, path)
-global_variables = render('global_variables.rb', { name: project_name.downcase }, path)
-helpers = render('helpers.rb', {}, path)
-helper_methods = render('helper_methods.rb', {}, path)
-main = render('main.rb', {}, path)
-main_aws_helper = render('main_aws_helper.rb', {}, path)
-parent_spec = render('parent_stack_spec.rb', { name: project_name.capitalize }, path)
-project_concern = render('project_concern.rb', { name: project_name.capitalize }, path)
-project_stack = render('project_stack.rb', { name: project_name.capitalize }, path)
-rakefile = render('Rakefile', {}, path)
-rubocop = render('.rubocop.yml', {}, path)
-shared_methods = render('shared_methods.rb', {}, path)
-spec_helper = render('spec_helper.rb', {}, path)
-subnets = render('subnets.rb', { name: project_name }, path)
-upload_stack = render('upload_stack.rb', {}, path)
-vpc_stack = render('vpc_stack.rb', { name: project_name }, path)
-vpc_concern = render('vpc_concerns.rb', { name: project_name }, path)
-vpc_spec = render('vpc_spec.rb', { name: project_name.capitalize }, path)
+dotenv = render(".env", render_args, path)
+aws_sdk = render("aws_sdk.rb", {}, path)
+compiler = render("compiler.rb", {}, path)
+core_deploy = render("core_deploy.rb", { name: project_name }, path)
+core_upload = render("core_upload.rb", {}, path)
+core_compile = render("core_compile.rb", {}, path)
+core_diff = render("core_diff.rb", {}, path)
+dependencies = render("dependencies.rb", {}, path)
+deploy = render("deploy.rb", {}, path)
+dotenv_test = render(".env.test", { name: project_name }, path)
+dotenv_production = render(".env.production", { name: project_name }, path)
+dotenv_rspec = render(".env.rspec", { name: project_name }, path)
+ecs_stack = render("ecs_stack.rb", {}, path)
+ecs_stack_concern = render("ecs_Stack_concern.rb", { name: project_name }, path)
+gemfile = render("Gemfile", { version: Rubycfn::VERSION }, path)
+gitignore = render(".gitignore", {}, path)
+global_variables = render("global_variables.rb", { name: project_name.downcase }, path)
+helpers = render("helpers.rb", {}, path)
+helper_methods = render("helper_methods.rb", {}, path)
+main = render("main.rb", {}, path)
+main_aws_helper = render("main_aws_helper.rb", {}, path)
+parent_spec = render("parent_stack_spec.rb", { name: project_name.capitalize }, path)
+project_concern = render("project_concern.rb", { name: project_name.capitalize }, path)
+project_stack = render("project_stack.rb", { name: project_name.capitalize }, path)
+rakefile = render("Rakefile", {}, path)
+rubocop = render(".rubocop.yml", {}, path)
+shared_methods = render("shared_methods.rb", {}, path)
+spec_helper = render("spec_helper.rb", {}, path)
+subnets = render("subnets.rb", { name: project_name }, path)
+upload_stack = render("upload_stack.rb", {}, path)
+vpc_stack = render("vpc_stack.rb", { name: project_name }, path)
+vpc_concern = render("vpc_concerns.rb", { name: project_name }, path)
+vpc_spec = render("vpc_spec.rb", { name: project_name.capitalize }, path)
 
 # Create directory structure
 rubycfn_structure(project_path).each do |dir|
   FileUtils.mkdir_p dir
 end
 
-File.open("#{project_path}/lib/aws_helper/aws_sdk.rb", 'w') { |file| file.write(aws_sdk) }
-File.open("#{project_path}/lib/aws_helper/compiler.rb", 'w') { |file| file.write(compiler) }
-File.open("#{project_path}/lib/aws_helper/dependencies.rb", 'w') { |file| file.write(dependencies) }
-File.open("#{project_path}/lib/aws_helper/deploy.rb", 'w') { |file| file.write(deploy) }
-File.open("#{project_path}/lib/core/deploy.rb", 'w') { |file| file.write(core_deploy) }
-File.open("#{project_path}/lib/core/compile.rb", 'w') { |file| file.write(core_compile) }
-File.open("#{project_path}/lib/core/diff.rb", 'w') { |file| file.write(core_diff) }
-File.open("#{project_path}/lib/core/upload.rb", 'w') { |file| file.write(core_upload) }
-File.open("#{project_path}/.env", 'w') { |file| file.write(dotenv) }
-File.open("#{project_path}/.env.test", 'w') { |file| file.write(dotenv_test) }
-File.open("#{project_path}/.env.production", 'w') { |file| file.write(dotenv_production) }
-File.open("#{project_path}/.env.rspec", 'w') { |file| file.write(dotenv_rspec) }
-File.open("#{project_path}/lib/stacks/ecs_stack.rb", 'w') { |file| file.write(ecs_stack) }
-File.open("#{project_path}/lib/stacks/ecs_stack/ecs_cluster.rb", 'w') { |file| file.write(ecs_stack_concern) }
-File.open("#{project_path}/Gemfile", 'w') { |file| file.write(gemfile) }
-File.open("#{project_path}/.gitignore", 'w') { |file| file.write(gitignore) }
-File.open("#{project_path}/lib/shared_concerns/global_variables.rb", 'w') { |file| file.write(global_variables) }
-File.open("#{project_path}/lib/aws_helper/helpers.rb", 'w') { |file| file.write(helpers) }
-File.open("#{project_path}/lib/shared_concerns/helper_methods.rb", 'w') { |file| file.write(helper_methods) }
-File.open("#{project_path}/lib/main.rb", 'w') { |file| file.write(main) }
-File.open("#{project_path}/lib/aws_helper/main.rb", 'w') { |file| file.write(main_aws_helper) }
-File.open("#{project_path}/spec/lib/parent_spec.rb", 'w') { |file| file.write(parent_spec) }
-File.open("#{project_path}/lib/stacks/parent_stack.rb", 'w') { |file| file.write(project_stack) }
-File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", 'w') { |file| file.write(project_concern) }
-File.open("#{project_path}/Rakefile", 'w') { |file| file.write(rakefile) }
-File.open("#{project_path}/.rubocop.yml", 'w') { |file| file.write(rubocop) }
-File.open("#{project_path}/lib/shared_concerns/shared_methods.rb", 'w') { |file| file.write(shared_methods) }
-File.open("#{project_path}/spec/spec_helper.rb", 'w') { |file| file.write(spec_helper) }
-File.open("#{project_path}/lib/stacks/vpc_stack/subnets.rb", 'w') { |file| file.write(subnets) }
-File.open("#{project_path}/lib/aws_helper/upload_stack.rb", 'w') { |file| file.write(upload_stack) }
-File.open("#{project_path}/spec/lib/vpc_spec.rb", 'w') { |file| file.write(vpc_spec) }
-File.open("#{project_path}/lib/stacks/vpc_stack.rb", 'w') { |file| file.write(vpc_stack) }
-File.open("#{project_path}/lib/stacks/vpc_stack/vpc.rb", 'w') { |file| file.write(vpc_concern) }
+File.open("#{project_path}/lib/aws_helper/aws_sdk.rb", "w") { |file| file.write(aws_sdk) }
+File.open("#{project_path}/lib/aws_helper/compiler.rb", "w") { |file| file.write(compiler) }
+File.open("#{project_path}/lib/aws_helper/dependencies.rb", "w") { |file| file.write(dependencies) }
+File.open("#{project_path}/lib/aws_helper/deploy.rb", "w") { |file| file.write(deploy) }
+File.open("#{project_path}/lib/core/deploy.rb", "w") { |file| file.write(core_deploy) }
+File.open("#{project_path}/lib/core/compile.rb", "w") { |file| file.write(core_compile) }
+File.open("#{project_path}/lib/core/diff.rb", "w") { |file| file.write(core_diff) }
+File.open("#{project_path}/lib/core/upload.rb", "w") { |file| file.write(core_upload) }
+File.open("#{project_path}/.env", "w") { |file| file.write(dotenv) }
+File.open("#{project_path}/.env.test", "w") { |file| file.write(dotenv_test) }
+File.open("#{project_path}/.env.production", "w") { |file| file.write(dotenv_production) }
+File.open("#{project_path}/.env.rspec", "w") { |file| file.write(dotenv_rspec) }
+File.open("#{project_path}/lib/stacks/ecs_stack.rb", "w") { |file| file.write(ecs_stack) }
+File.open("#{project_path}/lib/stacks/ecs_stack/ecs_cluster.rb", "w") { |file| file.write(ecs_stack_concern) }
+File.open("#{project_path}/Gemfile", "w") { |file| file.write(gemfile) }
+File.open("#{project_path}/.gitignore", "w") { |file| file.write(gitignore) }
+File.open("#{project_path}/lib/shared_concerns/global_variables.rb", "w") { |file| file.write(global_variables) }
+File.open("#{project_path}/lib/aws_helper/helpers.rb", "w") { |file| file.write(helpers) }
+File.open("#{project_path}/lib/shared_concerns/helper_methods.rb", "w") { |file| file.write(helper_methods) }
+File.open("#{project_path}/lib/main.rb", "w") { |file| file.write(main) }
+File.open("#{project_path}/lib/aws_helper/main.rb", "w") { |file| file.write(main_aws_helper) }
+File.open("#{project_path}/spec/lib/parent_spec.rb", "w") { |file| file.write(parent_spec) }
+File.open("#{project_path}/lib/stacks/parent_stack.rb", "w") { |file| file.write(project_stack) }
+File.open("#{project_path}/lib/stacks/parent_stack/parent.rb", "w") { |file| file.write(project_concern) }
+File.open("#{project_path}/Rakefile", "w") { |file| file.write(rakefile) }
+File.open("#{project_path}/.rubocop.yml", "w") { |file| file.write(rubocop) }
+File.open("#{project_path}/lib/shared_concerns/shared_methods.rb", "w") { |file| file.write(shared_methods) }
+File.open("#{project_path}/spec/spec_helper.rb", "w") { |file| file.write(spec_helper) }
+File.open("#{project_path}/lib/stacks/vpc_stack/subnets.rb", "w") { |file| file.write(subnets) }
+File.open("#{project_path}/lib/aws_helper/upload_stack.rb", "w") { |file| file.write(upload_stack) }
+File.open("#{project_path}/spec/lib/vpc_spec.rb", "w") { |file| file.write(vpc_spec) }
+File.open("#{project_path}/lib/stacks/vpc_stack.rb", "w") { |file| file.write(vpc_stack) }
+File.open("#{project_path}/lib/stacks/vpc_stack/vpc.rb", "w") { |file| file.write(vpc_concern) }
 
 puts "Setting up Rubycfn #{project_name} project..."
 `cd #{project_name}-rubycfn && git init && bundle`
