@@ -1,11 +1,10 @@
 # Rubycfn RubyCFN is a light-weight CloudFormation DSL
-require 'active_support/concern'
+require "active_support/concern"
 require "json"
 require "neatjson"
 require "rubycfn/version"
-#require "tasks/tasks"
 
-@depends_on = [] 
+@depends_on = []
 @description = ""
 @transform = ""
 @outputs = {}
@@ -14,7 +13,7 @@ require "rubycfn/version"
 @metadata = {}
 @mappings = {}
 @conditions = {}
-@AWSresources = {}
+@aws_resources = {}
 @imports = []
 @resource_name = ""
 @variables = {}
@@ -24,10 +23,24 @@ require "rubycfn/version"
 class Symbol
   def ref(attr = nil)
     unless attr
-      return { Ref: self.to_s.split("_").map{ |e| e.capitalize }.join }
+      return { Ref: to_s.split("_").map(&:capitalize).join }
     end
-    attr = attr.class == String ? attr : attr.to_s.split('_').map{|e| e.capitalize}.join
-    return { "Fn::GetAtt": [ self.to_s.split("_").map{ |e| e.capitalize }.join, attr ] }
+    attr = attr.class == String ? attr : attr.to_s.split("_").map(&:capitalize).join
+    {
+      "Fn::GetAtt": [
+        to_s.split("_").map(&:capitalize).join, attr
+      ]
+    }
+  end
+
+  def fntransform(parameters = nil)
+    raise "fntransform parameters must be of type Hash" unless parameters.class == Hash
+    {
+      "Fn::Transform": {
+        "Name": to_s.split("_").map(&:capitalize).join,
+        "Parameters": parameters
+      }
+    }
   end
 end
 
@@ -45,15 +58,30 @@ end
 class String
   def cfnize
     return self if self !~ /_/ && self =~ /[A-Z]+.*/
-    split('_').map{|e| e.capitalize}.join
+    split("_").map(&:capitalize).join
   end
 
   def ref(attr = nil)
     unless attr
       return { Ref: self }
     end
-    attr = attr.class == String ? attr : attr.to_s.split('_').map{|e| e.capitalize}.join
-    return { "Fn::GetAtt": [ self, attr ] }
+    attr = attr.class == String ? attr : attr.to_s.split("_").map(&:capitalize).join
+    {
+      "Fn::GetAtt": [
+        self,
+        attr
+      ]
+    }
+  end
+
+  def fntransform(parameters = nil)
+    raise "fntransform parameters must be of type Hash" unless parameters.class == Hash
+    {
+      "Fn::Transform": {
+        "Name": self,
+        "Parameters": parameters
+      }
+    }
   end
 
   def fnsplit(separator = "")
@@ -66,25 +94,35 @@ class String
   end
 
   def fnbase64
-    return { "Fn::Base64": self }
+    {
+      "Fn::Base64": self
+    }
   end
 
   def fngetazs
-    return { "Fn::GetAZs": self }
+    {
+      "Fn::GetAZs": self
+    }
   end
 
   def fnsub(variable_map = nil)
     unless variable_map
       return { "Fn::Sub": self }
     end
-    return { "Fn::Sub": [ self, variable_map ] }
+    {
+      "Fn::Sub": [
+        self,
+        variable_map
+      ]
+    }
   end
 
   def fnimportvalue
-    return { "Fn::Import": self }
+    {
+      "Fn::Import": self
+    }
   end
   alias_method :fnimport, :fnimportvalue
-
 end
 
 class Array
@@ -126,7 +164,7 @@ class Array
   end
 
   def fnfindinmap(name = nil)
-    self.unshift(name.cfnize) if name
+    unshift(name.cfnize) if name
     {
       "Fn::FindInMap": self
     }
@@ -154,20 +192,26 @@ class Array
 end
 
 class ::Hash
+  # rubocop:disable Style/RedundantSelf
+  # rubocop:disable Style/CaseEquality
+  # rubocop:disable Lint/UnusedBlockArgument
   def deep_merge(second)
     merger = proc { |key, v1, v2| Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : Array === v1 && Array === v2 ? v1 | v2 : [:undefined, nil, :nil].include?(v2) ? v1 : v2 }
     self.merge(second.to_h, &merger)
   end
+  # rubocop:enable Style/RedundantSelf
+  # rubocop:enable Style/CaseEquality
+  # rubocop:enable Lint/UnusedBlockArgument
 
   def recursive_compact
     delete_if do |k, v|
-      next if v === false || k =~ /Fn\:/
-      (v.respond_to?(:empty?) ? v.empty? : !v) or v.instance_of?(Hash) && v.recursive_compact.empty?
+      next if v == false || k =~ /Fn\:/
+      (v.respond_to?(:empty?) ? v.empty? : !v) || v.instance_of?(Hash) && v.recursive_compact.empty?
     end
   end
 
   def compact
-    delete_if { |k, v| v.nil? }
+    delete_if { |_k, v| v.nil? }
   end
 
   def fnselect(index = 0)
@@ -184,6 +228,7 @@ module Rubycfn
   extend ActiveSupport::Concern
 
   included do
+    # rubocop:disable Style/UnneededCondition
     def self.method_missing(name, *args)
       super unless TOPLEVEL_BINDING.eval("@variables[:#{name}]") || \
                    TOPLEVEL_BINDING.eval("@variables[:#{name}] === false") ||
@@ -195,17 +240,16 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@global_variables[:#{name}]")
       end
     end
+    # rubocop:enable Style/UnneededCondition
 
     def self.transform(transform = "AWS::Serverless-2016-10-31")
-      unless transform.nil?
-        TOPLEVEL_BINDING.eval("@transform = '#{transform}'")
-      end
+      return if transform.nil?
+      TOPLEVEL_BINDING.eval("@transform = '#{transform}'")
     end
 
     def self.description(description = "")
-      unless description.nil?
-        TOPLEVEL_BINDING.eval("@description = '#{description}'")
-      end
+      return if description.nil?
+      TOPLEVEL_BINDING.eval("@description = '#{description}'")
     end
 
     def self.condition(name, arguments)
@@ -225,7 +269,9 @@ module Rubycfn
       end
 
       name = name.to_s.cfnize
-      kv_pairs = arguments[:data] ? arguments[:data] : { "#{arguments[:key]}": "#{arguments[:value]}" }
+      # rubocop:disable Style/UnneededCondition
+      kv_pairs = arguments[:data] ? arguments[:data] : { "#{arguments[:key]}": (arguments[:value]).to_s }
+      # rubocop:enable Style/UnneededCondition
       res = {
         "#{name}": {
           "#{arguments[:name]}": kv_pairs
@@ -287,26 +333,22 @@ module Rubycfn
       end
 
       if arguments[:filter]
-        arguments[:value] = self.send(arguments[:filter], arguments[:value])
+        arguments[:value] = send(arguments[:filter], arguments[:value])
       end
 
       res = {
         "#{name}": arguments[:value]
       }
-      if arguments[:global] == false
-        TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
-      else
-        TOPLEVEL_BINDING.eval("@global_variables = @global_variables.deep_merge(#{res})")
-        TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
-      end
+      TOPLEVEL_BINDING.eval("@global_variables = @global_variables.deep_merge(#{res})") unless arguments[:global] == false
+      TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
     end
 
     def self.depends_on(resources)
       case resources
-        when String
-          resources = [resources.cfnize]
-        when Array
-          resources = resources.map { |r| r.cfnize }
+      when String
+        resources = [resources.cfnize]
+      when Array
+        resources = resources.map(&:cfnize)
       end
       TOPLEVEL_BINDING.eval("@depends_on = #{resources}")
     end
@@ -315,29 +357,23 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@resource_name = '#{name}'")
     end
 
-    def self.set(name, index = 0, &block)
+    # rubocop:disable Lint/UnusedMethodArgument
+    def self.set(name, _index = 0, &block)
       res = {
         "#{name}": yield
       }
       TOPLEVEL_BINDING.eval("@variables = @variables.deep_merge(#{res})")
     end
+    # rubocop:enable Lint/UnusedMethodArgument
 
-    def self.meta(name, index = 0, &block)
-      if name.class == Symbol
-        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
-      else
-        name = TOPLEVEL_BINDING.eval("'#{name}'")
-      end
+    def self.meta(name, _index = 0, &block)
+      name = name.class == Symbol ? TOPLEVEL_BINDING.eval("'#{name}'.cfnize") : TOPLEVEL_BINDING.eval("'#{name}'")
       res = { "#{name}": yield(block) }
       TOPLEVEL_BINDING.eval("@metadata = @metadata.deep_merge(#{res})")
     end
 
-    def self.property(name, index = 0, &block)
-      if name.class == Symbol
-        name = TOPLEVEL_BINDING.eval("'#{name}'.cfnize")
-      else
-        name = TOPLEVEL_BINDING.eval("'#{name}'")
-      end
+    def self.property(name, _index = 0, &block)
+      name = name.class == Symbol ? TOPLEVEL_BINDING.eval("'#{name}'.cfnize") : TOPLEVEL_BINDING.eval("'#{name}'")
       res = { "#{name}": yield(block) }
       TOPLEVEL_BINDING.eval("@properties = @properties.deep_merge(#{res})")
     end
@@ -345,12 +381,8 @@ module Rubycfn
     def self.resource(name, arguments, &block)
       arguments[:amount] ||= 1
       origname = name.to_s
-      # Allow for non-camelcased resource names 
-      if name.class == Symbol
-        name = name.to_s.cfnize
-      else
-        name = name.to_s
-      end
+      # Allow for non-camelcased resource names
+      name = name.class == Symbol ? name.to_s.cfnize : name = name.to_s
       arguments[:type] =~ /^([A-Za-z0-9]*)\:\:/
       arguments[:cloud] ||= $1
 
@@ -359,20 +391,20 @@ module Rubycfn
         arguments[:cloud] = "AWS"
       end
       arguments[:amount].times do |i|
-        resource_suffix = i == 0 ? "" : "#{i+1}"
+        resource_suffix = i.zero? ? "" : (i + 1).to_s
         if arguments[:type].class == Module
           send("include", arguments[:type][origname, resource_suffix, &block])
         else
           yield self, i if block_given?
 
-          resource_postpend = TOPLEVEL_BINDING.eval("@resource_name").empty? ? i+1 : ""
+          resource_postpend = TOPLEVEL_BINDING.eval("@resource_name").empty? ? i + 1 : ""
           unless TOPLEVEL_BINDING.eval("@resource_name").empty?
             name = TOPLEVEL_BINDING.eval("@resource_name")
             TOPLEVEL_BINDING.eval("@resource_name = ''")
           end
 
           res = {
-            "#{name.to_s}#{i == 0 ? "" : resource_postpend}": {
+            "#{name.to_s}#{i.zero? ? "" : resource_postpend}": {
               DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
               Metadata: TOPLEVEL_BINDING.eval("@metadata"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
@@ -380,7 +412,7 @@ module Rubycfn
               Condition: arguments[:condition]
             }
           }
-          TOPLEVEL_BINDING.eval("@AWSresources = @AWSresources.deep_merge(#{res})")
+          TOPLEVEL_BINDING.eval("@aws_resources = @aws_resources.deep_merge(#{res})")
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@properties = {}")
@@ -399,14 +431,14 @@ module Rubycfn
       when "AWS"
         skeleton = { "AWSTemplateFormatVersion": "2010-09-09" }
         skeleton = JSON.parse(skeleton.to_json)
-        skeleton.merge!(Transform: TOPLEVEL_BINDING.eval("@transform"))
-        skeleton.merge!(Description: TOPLEVEL_BINDING.eval("@description"))
-        skeleton.merge!(Mappings: sort_json(TOPLEVEL_BINDING.eval("@mappings")))
-        skeleton.merge!(Parameters: sort_json(TOPLEVEL_BINDING.eval("@parameters")))
-        skeleton.merge!(Conditions: sort_json(TOPLEVEL_BINDING.eval("@conditions")))
-        skeleton.merge!(Resources: sort_json(TOPLEVEL_BINDING.eval("@AWSresources")))
-        skeleton.merge!(Outputs: sort_json(TOPLEVEL_BINDING.eval("@outputs")))
-        TOPLEVEL_BINDING.eval("@variables = @AWSresources = @outputs = @metadata = @properties = @mappings = @parameters = {}")
+        skeleton[:Transform] = TOPLEVEL_BINDING.eval("@transform")
+        skeleton[:Description] = TOPLEVEL_BINDING.eval("@description")
+        skeleton[:Mappings] = sort_json(TOPLEVEL_BINDING.eval("@mappings"))
+        skeleton[:Parameters] = sort_json(TOPLEVEL_BINDING.eval("@parameters"))
+        skeleton[:Conditions] = sort_json(TOPLEVEL_BINDING.eval("@conditions"))
+        skeleton[:Resources] = sort_json(TOPLEVEL_BINDING.eval("@aws_resources"))
+        skeleton[:Outputs] = sort_json(TOPLEVEL_BINDING.eval("@outputs"))
+        TOPLEVEL_BINDING.eval("@variables = @aws_resources = @outputs = @metadata = @properties = @mappings = @parameters = {}")
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
