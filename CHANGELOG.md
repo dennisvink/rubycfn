@@ -4,6 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.3.8 (Next Release)
 
+  * Refactored some code [@dennisvink][@dennisvink]
+
 ## 0.3.7
 
   * Allow symbols to be passed to Ref as argument for Fn::GetAtt -- [@dennisvink][@dennisvink]
