@@ -14,6 +14,11 @@ describe Rubycfn do
 
       resource :rspec_resource_name,
                type: "Rspec::Test",
+               update_policy: {
+                 "AutoScalingReplacingUpdate": {
+                   "WillReplace": true
+                 }
+               },
                amount: 2 do |r|
         r.property(:name) { "RSpec" }
       end
@@ -54,6 +59,7 @@ describe Rubycfn do
 
         it { should have_key "Type" }
         it { should have_key "Properties" }
+        it { should have_key "UpdatePolicy"}
 
         context "resource type is correct" do
           let(:type) { resource["Type"] }
@@ -67,6 +73,13 @@ describe Rubycfn do
           subject { properties }
 
           it { should have_key "Name" }
+        end
+
+        context "Update policy is correct" do
+          let(:update_policy) { resource["UpdatePolicy"] }
+          subject { update_policy }
+
+          it { should include("AutoScalingReplacingUpdate" => { "WillReplace" => true })}
         end
       end
     end
