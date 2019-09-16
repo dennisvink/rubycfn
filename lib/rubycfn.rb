@@ -409,7 +409,8 @@ module Rubycfn
               Metadata: TOPLEVEL_BINDING.eval("@metadata"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
               Type: arguments[:type],
-              Condition: arguments[:condition]
+              Condition: arguments[:condition],
+              UpdatePolicy: arguments[:update_policy]
             }
           }
           TOPLEVEL_BINDING.eval("@aws_resources = @aws_resources.deep_merge(#{res})")
