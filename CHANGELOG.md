@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.3.9 (Next Release)
+## 0.3.10 (Next Release)
+
+## 0.3.9
+
+  * Add support for UpdatePolicy element in resource -- [@leonrodenburg][@leonrodenburg]
 
 ## 0.3.8
 
@@ -90,4 +94,4 @@ This project uses [Semantic Versioning](http://semver.org/).
   * Added Rubycfn CLI to generate new projects -- [@dennisvink][@dennisvink]
 
 [@dennisvink]: https://github.com/dennisvink
-
+[@leonrodenburg]: https://github.com/leonrodenburg
