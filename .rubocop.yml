@@ -51,12 +51,15 @@ Metrics/ModuleLength:
   Max: 500
 
 Metrics/MethodLength:
-  Max: 40
+  Max: 100
 
 Metrics/BlockLength:
   Max: 500
 
 Performance/Casecmp:
+  Enabled: false
+
+Style/RedundantSelf:
   Enabled: false
 
 Style/DoubleNegation:
