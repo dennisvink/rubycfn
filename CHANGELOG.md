@@ -2,11 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.0 (Next Release)
+## 0.4.1 (Next Release)
 
-  * Added resource elements `update_policy`, `update_replace_policy`
-    `metadata`, `depends_on`, `deletion_policy` and `creation_policy`.
-    This release breaks the `r.meta` property. -- [@dennisvink][@dennisvink]
+## 0.4.0
+
+  * Added resource elements `update_policy`, `update_replace_policy`, `metadata`, `depends_on`, `deletion_policy` and `creation_policy`.
+  * This release breaks the `r.meta` property. -- [@dennisvink][@dennisvink]
 
 ## 0.3.9
 
