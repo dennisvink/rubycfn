@@ -4,13 +4,11 @@ require "json"
 require "neatjson"
 require "rubycfn/version"
 
-@depends_on = []
 @description = ""
 @transform = ""
 @outputs = {}
 @parameters = {}
 @properties = {}
-@metadata = {}
 @mappings = {}
 @conditions = {}
 @aws_resources = {}
@@ -21,6 +19,11 @@ require "rubycfn/version"
 
 # Monkey patching
 class Symbol
+  def cfnize
+    return self.to_s if self.to_s !~ /_/ && self.to_s =~ /[A-Z]+.*/
+    to_s.split("_").map(&:capitalize).join
+  end
+
   def ref(attr = nil)
     unless attr
       return { Ref: to_s.split("_").map(&:capitalize).join }
@@ -366,12 +369,6 @@ module Rubycfn
     end
     # rubocop:enable Lint/UnusedMethodArgument
 
-    def self.meta(name, _index = 0, &block)
-      name = name.class == Symbol ? TOPLEVEL_BINDING.eval("'#{name}'.cfnize") : TOPLEVEL_BINDING.eval("'#{name}'")
-      res = { "#{name}": yield(block) }
-      TOPLEVEL_BINDING.eval("@metadata = @metadata.deep_merge(#{res})")
-    end
-
     def self.property(name, _index = 0, &block)
       name = name.class == Symbol ? TOPLEVEL_BINDING.eval("'#{name}'.cfnize") : TOPLEVEL_BINDING.eval("'#{name}'")
       res = { "#{name}": yield(block) }
@@ -403,21 +400,48 @@ module Rubycfn
             TOPLEVEL_BINDING.eval("@resource_name = ''")
           end
 
+          # Transform depends_on based on input class
+          unless arguments[:depends_on].nil? && TOPLEVEL_BINDING.eval("@depends_on").nil?
+
+            # Initialize arguments[:depends_on] if it is nil
+            arguments[:depends_on] = arguments[:depends_on].nil? && [] || arguments[:depends_on]
+
+            # If the argument is a string, create an array out of it with a single element
+            arguments[:depends_on] = arguments[:depends_on].class == Array && arguments[:depends_on] || [arguments[:depends_on]]
+
+            # `r.depends_on` is used to amend depends_on with resources with dynamic names
+            # Here we add them to arguments[:depends_on]
+            to_amend = TOPLEVEL_BINDING.eval("@depends_on")
+            unless to_amend.nil?
+              to_amend = to_amend.class == String && [ to_amend ] || to_amend
+              to_amend.each do |amend|
+                arguments[:depends_on].push(amend)
+              end
+            end
+            TOPLEVEL_BINDING.eval("@depends_on = []")
+
+            # Finally, we render the DependsOn array
+            arguments[:depends_on].map! { |resource| resource.class == String && resource.to_s || resource.to_s.split("_").map(&:capitalize).join }
+          end
+
           res = {
             "#{name.to_s}#{i.zero? ? "" : resource_postpend}": {
-              DependsOn: TOPLEVEL_BINDING.eval("@depends_on"),
-              Metadata: TOPLEVEL_BINDING.eval("@metadata"),
               Properties: TOPLEVEL_BINDING.eval("@properties"),
               Type: arguments[:type],
               Condition: arguments[:condition],
-              UpdatePolicy: arguments[:update_policy]
+              UpdatePolicy: arguments[:update_policy],
+              UpdateReplacePolicy: arguments[:update_replace_policy],
+              Metadata: arguments[:metadata],
+              DependsOn: arguments[:depends_on],
+              DeletionPolicy: arguments[:deletion_policy],
+              CreationPolicy: arguments[:creation_policy]
             }
           }
+          arguments[:depends_on] = []
           TOPLEVEL_BINDING.eval("@aws_resources = @aws_resources.deep_merge(#{res})")
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@properties = {}")
-        TOPLEVEL_BINDING.eval("@metadata = {}")
       end
     end
 
@@ -439,7 +463,7 @@ module Rubycfn
         skeleton[:Conditions] = sort_json(TOPLEVEL_BINDING.eval("@conditions"))
         skeleton[:Resources] = sort_json(TOPLEVEL_BINDING.eval("@aws_resources"))
         skeleton[:Outputs] = sort_json(TOPLEVEL_BINDING.eval("@outputs"))
-        TOPLEVEL_BINDING.eval("@variables = @aws_resources = @outputs = @metadata = @properties = @mappings = @parameters = {}")
+        TOPLEVEL_BINDING.eval("@variables = @aws_resources = @outputs = @properties = @mappings = @parameters = {}")
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
