@@ -13,6 +13,7 @@ describe Rubycfn do
       description "RSpec Test Stack"
 
       resource :rspec_resource_name,
+               depends_on: [:foo_bar,"fooBar"],
                type: "Rspec::Test",
                update_policy: {
                  "AutoScalingReplacingUpdate": {
@@ -20,6 +21,7 @@ describe Rubycfn do
                  }
                },
                amount: 2 do |r|
+        r.depends_on [ "barFoo", :bar_foo ]
         r.property(:name) { "RSpec" }
       end
     end
@@ -57,9 +59,17 @@ describe Rubycfn do
         let(:resource) { resources["RspecResourceName"] }
         subject { resource }
 
+        it { should have_key "DependsOn" }
         it { should have_key "Type" }
         it { should have_key "Properties" }
         it { should have_key "UpdatePolicy"}
+
+        context "depends_on is rendered correctly" do
+          let(:depends_on)  { resource["DependsOn"] }
+          subject { depends_on }
+
+          it { should eq ["FooBar", "fooBar", "barFoo", "BarFoo"] }
+        end
 
         context "resource type is correct" do
           let(:type) { resource["Type"] }
