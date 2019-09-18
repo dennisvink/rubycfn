@@ -195,14 +195,12 @@ class Array
 end
 
 class ::Hash
-  # rubocop:disable Style/RedundantSelf
   # rubocop:disable Style/CaseEquality
   # rubocop:disable Lint/UnusedBlockArgument
   def deep_merge(second)
     merger = proc { |key, v1, v2| Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : Array === v1 && Array === v2 ? v1 | v2 : [:undefined, nil, :nil].include?(v2) ? v1 : v2 }
     self.merge(second.to_h, &merger)
   end
-  # rubocop:enable Style/RedundantSelf
   # rubocop:enable Style/CaseEquality
   # rubocop:enable Lint/UnusedBlockArgument
 
@@ -413,7 +411,7 @@ module Rubycfn
             # Here we add them to arguments[:depends_on]
             to_amend = TOPLEVEL_BINDING.eval("@depends_on")
             unless to_amend.nil?
-              to_amend = to_amend.class == String && [ to_amend ] || to_amend
+              to_amend = to_amend.class == String && [to_amend] || to_amend
               to_amend.each do |amend|
                 arguments[:depends_on].push(amend)
               end
