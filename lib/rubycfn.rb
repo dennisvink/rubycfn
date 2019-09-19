@@ -411,6 +411,8 @@ module Rubycfn
             arguments[:depends_on].map! { |resource| resource.class == String && resource.to_s || resource.to_s.split("_").map(&:capitalize).join }
           end
 
+          arguments[:depends_on] ||= []
+          rendered_depends_on = TOPLEVEL_BINDING.eval("@depends_on").nil? && arguments[:depends_on] || arguments[:depends_on] + TOPLEVEL_BINDING.eval("@depends_on")
           res = {
             "#{name.to_s}#{i.zero? ? "" : resource_postpend}": {
               Properties: TOPLEVEL_BINDING.eval("@properties"),
@@ -419,7 +421,7 @@ module Rubycfn
               UpdatePolicy: arguments[:update_policy],
               UpdateReplacePolicy: arguments[:update_replace_policy],
               Metadata: arguments[:metadata],
-              DependsOn: arguments[:depends_on] + TOPLEVEL_BINDING.eval("@depends_on"),
+              DependsOn: rendered_depends_on,
               DeletionPolicy: arguments[:deletion_policy],
               CreationPolicy: arguments[:creation_policy]
             }
