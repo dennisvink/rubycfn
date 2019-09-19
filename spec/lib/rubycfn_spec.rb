@@ -20,9 +20,13 @@ describe Rubycfn do
                    "WillReplace": true
                  }
                },
-               amount: 2 do |r|
-        r.depends_on [ "barFoo", :bar_foo ]
+               amount: 2 do |r, index|
+        r.depends_on [ "barFoo", :bar_foo ] unless index.positive?
         r.property(:name) { "RSpec" }
+        r.property(:security_group_id) { :rspec_security_group.ref }
+        r.property(:some_other_ref) { "rSpecSecurityGroup".ref }
+        r.property(:some_arn) { :rspec_resource.ref(:arn) }
+        r.property(:some_other_arn) { :rspec_resource.ref("FooBar") }
       end
     end
   end
@@ -54,6 +58,8 @@ describe Rubycfn do
       subject { resources }
 
       it { should have_key "RspecResourceName" }
+      it { should have_key "RspecResourceName2" }
+      it { should_not have_key "RspecResourceName3" }
 
       context "has resource type" do
         let(:resource) { resources["RspecResourceName"] }
@@ -69,6 +75,45 @@ describe Rubycfn do
           subject { depends_on }
 
           it { should eq ["FooBar", "fooBar", "barFoo", "BarFoo"] }
+        end
+
+        context "has correct properties" do
+          let(:properties) { resource["Properties"] }
+          subject { properties }
+
+          it { should have_key "Name" }
+          it { should have_key "SecurityGroupId" }
+          it { should have_key "SomeOtherRef" }
+          it { should have_key "SomeArn" }
+          it { should have_key "SomeOtherArn" }
+
+          context "ref symbol is rendered correctly" do
+            let(:ref_symbol) { properties["SecurityGroupId"] }
+            subject { ref_symbol }
+
+            it { should eq JSON.parse({ Ref: "RspecSecurityGroup" }.to_json) }
+          end
+
+          context "ref string is rendered correctly" do
+            let(:ref_string) { properties["SomeOtherRef"] }
+            subject { ref_string }
+
+            it { should eq JSON.parse({ Ref: "rSpecSecurityGroup" }.to_json) }
+          end
+
+          context "Fn:GetAtt with symbol is rendered correctly" do
+            let(:fngetatt_symbol) { properties["SomeArn"] }
+            subject { fngetatt_symbol }
+
+            it { should eq JSON.parse({ "Fn::GetAtt": ["RspecResource", "Arn"] }.to_json) }
+          end
+
+          context "Fn:GetAtt with string is rendered correctly" do
+            let(:fngetatt_string) { properties["SomeOtherArn"] }
+            subject { fngetatt_string }
+
+            it { should eq JSON.parse({ "Fn::GetAtt": ["RspecResource", "FooBar"] }.to_json) }
+          end
         end
 
         context "resource type is correct" do
@@ -89,7 +134,23 @@ describe Rubycfn do
           let(:update_policy) { resource["UpdatePolicy"] }
           subject { update_policy }
 
-          it { should include("AutoScalingReplacingUpdate" => { "WillReplace" => true })}
+          it { should eq JSON.parse({ AutoScalingReplacingUpdate: { WillReplace: true }}.to_json) }
+        end
+      end
+      context "second resource does not have depends_on" do
+        let(:resource) { resources["RspecResourceName2"] }
+        subject { resource }
+
+        it { should have_key "DependsOn" }
+        it { should have_key "Type" }
+        it { should have_key "Properties" }
+        it { should have_key "UpdatePolicy"}
+
+        context "second resource renders only the initial depends_on resources" do
+          let(:depends_on)  { resource["DependsOn"] }
+          subject { depends_on }
+
+          it { should eq ["FooBar", "fooBar"] }
         end
       end
     end
