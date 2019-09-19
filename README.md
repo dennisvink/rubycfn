@@ -338,6 +338,84 @@ convert it to YAML format ;)
 To allow for SAM transformation use the 'transform' method inside your template.
 The transform method takes an optional argument, and defaults to "AWS::Serverless-2016-10-31"
 
+## Resource attributes
+
+When creating a resource there are a couple of arguments that can be passed
+along with it. In its most simple form a resource looks like this:
+
+```ruby
+resource :my_resource,
+         type: "AWS::Some::Resource
+```
+
+The following arguments are supported:
+
+* condition
+* creation_policy
+* deletion_policy
+* depends_on
+* metadata
+* type
+* update_policy
+* update_replace_policy
+
+To make a resource depend on another resource you can use the `depends_on`
+argument as follows:
+
+```ruby
+resource :my_resource,
+         depends_on: :some_other_resource,
+         type: "AWS::Some::Resource
+```
+
+or... if you want to make it dependant on multiple resources:
+
+```ruby
+resource :my_resource,
+         depends_on: %i(some_other_resource yet_another_resource),
+         type: "AWS::Some::Resource
+```
+
+If you want to dynamically generate DependsOn, you can do that in this way:
+
+```ruby
+resource :my_resource,
+         amount: 2,
+         type: "AWS::Some::Resource" do |r, index|
+  r.depends_on "SomeResource#{index}"
+end
+```
+
+The `depends_on` attribute and `r.depends_on` method can be used together.
+The `r.depends_on` specified resources get appended to the `depends_on`
+specified resources.
+
+## Manipulating the resource name
+
+Common practice is to use a symbol as argument to the `resource` method. The
+passed symbol is camel cased in the final CloudFormation template generation.
+It is imaginable that you have a use case where you need to control the resource
+name. There are two ways to achieve this.
+
+The first method is to pass a string as resource name, rather than a symbol.
+When you pass a string it will be taken as the literal resource name and not be
+camel cased. E.g.:
+
+```ruby
+resource "myAmazingResource",
+         type: "AWS::Some::Resource"
+```
+
+The second method is to use the resource method `_id`:
+
+```ruby
+resource :irrelevant_resource_name,
+         amount: 3,
+         type: "AWS::Some::Resource" do |r, index|
+  r._id "ResourceNameOverride#{index+1}"
+end
+```
+
 ## License
 
 MIT License
