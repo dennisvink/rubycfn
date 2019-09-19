@@ -20,8 +20,8 @@ describe Rubycfn do
                    "WillReplace": true
                  }
                },
-               amount: 2 do |r|
-        r.depends_on [ "barFoo", :bar_foo ]
+               amount: 2 do |r, index|
+        r.depends_on [ "barFoo", :bar_foo ] unless index.positive?
         r.property(:name) { "RSpec" }
         r.property(:security_group_id) { :rspec_security_group.ref }
         r.property(:some_other_ref) { "rSpecSecurityGroup".ref }
@@ -58,6 +58,8 @@ describe Rubycfn do
       subject { resources }
 
       it { should have_key "RspecResourceName" }
+      it { should have_key "RspecResourceName2" }
+      it { should_not have_key "RspecResourceName3" }
 
       context "has resource type" do
         let(:resource) { resources["RspecResourceName"] }
@@ -133,6 +135,22 @@ describe Rubycfn do
           subject { update_policy }
 
           it { should eq JSON.parse({ AutoScalingReplacingUpdate: { WillReplace: true }}.to_json) }
+        end
+      end
+      context "second resource does not have depends_on" do
+        let(:resource) { resources["RspecResourceName2"] }
+        subject { resource }
+
+        it { should have_key "DependsOn" }
+        it { should have_key "Type" }
+        it { should have_key "Properties" }
+        it { should have_key "UpdatePolicy"}
+
+        context "second resource renders only the initial depends_on resources" do
+          let(:depends_on)  { resource["DependsOn"] }
+          subject { depends_on }
+
+          it { should eq ["FooBar", "fooBar"] }
         end
       end
     end

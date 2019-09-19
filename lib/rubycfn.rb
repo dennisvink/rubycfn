@@ -407,17 +407,6 @@ module Rubycfn
             # If the argument is a string, create an array out of it with a single element
             arguments[:depends_on] = arguments[:depends_on].class == Array && arguments[:depends_on] || [arguments[:depends_on]]
 
-            # `r.depends_on` is used to amend depends_on with resources with dynamic names
-            # Here we add them to arguments[:depends_on]
-            to_amend = TOPLEVEL_BINDING.eval("@depends_on")
-            unless to_amend.nil?
-              to_amend = to_amend.class == String && [to_amend] || to_amend
-              to_amend.each do |amend|
-                arguments[:depends_on].push(amend)
-              end
-            end
-            TOPLEVEL_BINDING.eval("@depends_on = []")
-
             # Finally, we render the DependsOn array
             arguments[:depends_on].map! { |resource| resource.class == String && resource.to_s || resource.to_s.split("_").map(&:capitalize).join }
           end
@@ -430,12 +419,11 @@ module Rubycfn
               UpdatePolicy: arguments[:update_policy],
               UpdateReplacePolicy: arguments[:update_replace_policy],
               Metadata: arguments[:metadata],
-              DependsOn: arguments[:depends_on],
+              DependsOn: arguments[:depends_on] + TOPLEVEL_BINDING.eval("@depends_on"),
               DeletionPolicy: arguments[:deletion_policy],
               CreationPolicy: arguments[:creation_policy]
             }
           }
-          arguments[:depends_on] = []
           TOPLEVEL_BINDING.eval("@aws_resources = @aws_resources.deep_merge(#{res})")
         end
         TOPLEVEL_BINDING.eval("@depends_on = []")
