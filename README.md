@@ -345,7 +345,7 @@ along with it. In its most simple form a resource looks like this:
 
 ```ruby
 resource :my_resource,
-         type: "AWS::Some::Resource
+         type: "AWS::Some::Resource"
 ```
 
 The following arguments are supported:
@@ -365,7 +365,7 @@ argument as follows:
 ```ruby
 resource :my_resource,
          depends_on: :some_other_resource,
-         type: "AWS::Some::Resource
+         type: "AWS::Some::Resource"
 ```
 
 or... if you want to make it dependant on multiple resources:
@@ -373,7 +373,7 @@ or... if you want to make it dependant on multiple resources:
 ```ruby
 resource :my_resource,
          depends_on: %i(some_other_resource yet_another_resource),
-         type: "AWS::Some::Resource
+         type: "AWS::Some::Resource"
 ```
 
 If you want to dynamically generate DependsOn, you can do that in this way:
