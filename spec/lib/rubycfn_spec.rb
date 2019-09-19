@@ -23,6 +23,10 @@ describe Rubycfn do
                amount: 2 do |r|
         r.depends_on [ "barFoo", :bar_foo ]
         r.property(:name) { "RSpec" }
+        r.property(:security_group_id) { :rspec_security_group.ref }
+        r.property(:some_other_ref) { "rSpecSecurityGroup".ref }
+        r.property(:some_arn) { :rspec_resource.ref(:arn) }
+        r.property(:some_other_arn) { :rspec_resource.ref("FooBar") }
       end
     end
   end
@@ -71,6 +75,45 @@ describe Rubycfn do
           it { should eq ["FooBar", "fooBar", "barFoo", "BarFoo"] }
         end
 
+        context "has correct properties" do
+          let(:properties) { resource["Properties"] }
+          subject { properties }
+
+          it { should have_key "Name" }
+          it { should have_key "SecurityGroupId" }
+          it { should have_key "SomeOtherRef" }
+          it { should have_key "SomeArn" }
+          it { should have_key "SomeOtherArn" }
+
+          context "ref symbol is rendered correctly" do
+            let(:ref_symbol) { properties["SecurityGroupId"] }
+            subject { ref_symbol }
+
+            it { should eq JSON.parse({ Ref: "RspecSecurityGroup" }.to_json) }
+          end
+
+          context "ref string is rendered correctly" do
+            let(:ref_string) { properties["SomeOtherRef"] }
+            subject { ref_string }
+
+            it { should eq JSON.parse({ Ref: "rSpecSecurityGroup" }.to_json) }
+          end
+
+          context "Fn:GetAtt with symbol is rendered correctly" do
+            let(:fngetatt_symbol) { properties["SomeArn"] }
+            subject { fngetatt_symbol }
+
+            it { should eq JSON.parse({ "Fn::GetAtt": ["RspecResource", "Arn"] }.to_json) }
+          end
+
+          context "Fn:GetAtt with string is rendered correctly" do
+            let(:fngetatt_string) { properties["SomeOtherArn"] }
+            subject { fngetatt_string }
+
+            it { should eq JSON.parse({ "Fn::GetAtt": ["RspecResource", "FooBar"] }.to_json) }
+          end
+        end
+
         context "resource type is correct" do
           let(:type) { resource["Type"] }
           subject { type }
@@ -89,7 +132,7 @@ describe Rubycfn do
           let(:update_policy) { resource["UpdatePolicy"] }
           subject { update_policy }
 
-          it { should include("AutoScalingReplacingUpdate" => { "WillReplace" => true })}
+          it { should eq JSON.parse({ AutoScalingReplacingUpdate: { WillReplace: true }}.to_json) }
         end
       end
     end
