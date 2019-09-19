@@ -4,6 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.1 (Next Release)
 
+  * Added specs for Ref and Fn::GetAtt transformations with strings and symbols
+
 ## 0.4.0
 
   * Added resource elements `update_policy`, `update_replace_policy`, `metadata`, `depends_on`, `deletion_policy` and `creation_policy`.
