@@ -4,7 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.1 (Next Release)
 
-  * Added specs for Ref and Fn::GetAtt transformations with strings and symbols
+  * Fixed bug with DependsOn not being rendered correctly on multiple instances of resource -- [@dennisvink][@dennisvink]
+  * Added specs for Ref and Fn::GetAtt transformations with strings and symbols -- [@dennisvink][@dennisvink]
 
 ## 0.4.0
 
