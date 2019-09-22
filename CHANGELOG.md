@@ -4,6 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.2 (Next Release)
 
+  * Added CloudFormationResourceSpecification.json validation -- [@dennisvink][@dennisvink]
+ 
 ## 0.4.1
 
   * Fixed bug with DependsOn not being rendered correctly on multiple instances of resource -- [@dennisvink][@dennisvink]
