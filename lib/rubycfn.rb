@@ -17,7 +17,7 @@ require "rubycfn/version"
 @variables = {}
 @global_variables = {}
 
-@resource_specification = JSON.parse(File.open(File.join(File.dirname(__FILE__),"/../CloudFormationResourceSpecification.json")).read)
+@resource_specification = JSON.parse(File.open(File.join(File.dirname(__FILE__), "/../CloudFormationResourceSpecification.json")).read)
 if File.file?("CloudFormationResourceSpecification.json")
   @resource_specification = JSON.parse(File.open("CloudFormationResourceSpecification.json").read)
 end
@@ -426,9 +426,9 @@ module Rubycfn
             known_properties = resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"].keys
             mandatory_properties = []
             known_properties.each do |prop|
-              mandatory_properties.push(prop) if resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"][prop]["Required"] == true 
+              mandatory_properties.push(prop) if resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"][prop]["Required"] == true
             end
-            TOPLEVEL_BINDING.eval("@properties").each do |k,v|
+            TOPLEVEL_BINDING.eval("@properties").each do |k, _v|
               raise "Property `#{k}` for #{arguments[:type]} is not valid." unless known_properties.include? k.to_s
               mandatory_properties.delete(k.to_s)
             end
