@@ -9,6 +9,5 @@
 /doc/
 .ruby-version
 /test-reports
-CloudFormationResourceSpecification.json
 generated.rb
 /attic
