@@ -17,6 +17,11 @@ require "rubycfn/version"
 @variables = {}
 @global_variables = {}
 
+@resource_specification = JSON.parse(File.open(File.join(File.dirname(__FILE__),"/../CloudFormationResourceSpecification.json")).read)
+if File.file?("CloudFormationResourceSpecification.json")
+  @resource_specification = JSON.parse(File.open("CloudFormationResourceSpecification.json").read)
+end
+
 # Monkey patching
 class Symbol
   def cfnize
@@ -380,6 +385,9 @@ module Rubycfn
       name = name.class == Symbol ? name.to_s.cfnize : name = name.to_s
       arguments[:type] =~ /^([A-Za-z0-9]*)\:\:/
       arguments[:cloud] ||= $1
+      resource_specification = TOPLEVEL_BINDING.eval("@resource_specification")
+
+      raise "#{arguments[:type]} is not a valid resource type" unless resource_specification["ResourceTypes"][arguments[:type].to_s] || arguments[:type] =~ /^Custom\:\:/ || arguments[:type] =~ /AWS\:\:Serverless\:\:/
 
       # Custom resource types are AWS resources
       if arguments[:cloud] == "Custom" || arguments[:cloud] == "Rspec"
@@ -413,6 +421,19 @@ module Rubycfn
 
           arguments[:depends_on] ||= []
           rendered_depends_on = TOPLEVEL_BINDING.eval("@depends_on").nil? && arguments[:depends_on] || arguments[:depends_on] + TOPLEVEL_BINDING.eval("@depends_on")
+          if resource_specification["ResourceTypes"][arguments[:type].to_s]
+            resource_specification = TOPLEVEL_BINDING.eval("@resource_specification")
+            known_properties = resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"].keys
+            mandatory_properties = []
+            known_properties.each do |prop|
+              mandatory_properties.push(prop) if resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"][prop]["Required"] == true 
+            end
+            TOPLEVEL_BINDING.eval("@properties").each do |k,v|
+              raise "Property `#{k}` for #{arguments[:type]} is not valid." unless known_properties.include? k.to_s
+              mandatory_properties.delete(k.to_s)
+            end
+            raise "Property #{mandatory_properties.join(", ")} is mandatory for #{arguments[:type]}" unless mandatory_properties.count.zero?
+          end
           res = {
             "#{name.to_s}#{i.zero? ? "" : resource_postpend}": {
               Properties: TOPLEVEL_BINDING.eval("@properties"),
