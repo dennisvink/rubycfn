@@ -429,9 +429,11 @@ module Rubycfn
               mandatory_properties.push(prop) if resource_specification["ResourceTypes"][arguments[:type].to_s]["Properties"][prop]["Required"] == true
             end
             TOPLEVEL_BINDING.eval("@properties").each do |k, _v|
-              TOPLEVEL_BINDING.eval("@depends_on = []")
-              TOPLEVEL_BINDING.eval("@properties = {}")
-              raise "Property `#{k}` for #{arguments[:type]} is not valid." unless known_properties.include? k.to_s
+              unless known_properties.include? k.to_s
+                TOPLEVEL_BINDING.eval("@depends_on = []")
+                TOPLEVEL_BINDING.eval("@properties = {}")
+                raise "Property `#{k}` for #{arguments[:type]} is not valid."
+              end
               mandatory_properties.delete(k.to_s)
             end
             unless mandatory_properties.count.zero?
