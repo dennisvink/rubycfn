@@ -2,7 +2,9 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.2 (Next Release)
+## 0.4.3 (Next Release)
+
+## 0.4.2
 
   * Added CloudFormationResourceSpecification.json validation -- [@dennisvink][@dennisvink]
  

@@ -61,7 +61,7 @@ __________ ____ __________________.___._________ _____________________
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
  |    |   \    |  / |    |   \\____   |\     \____|     \    |    |   \
  |____|_  /______/  |______  // ______| \______  /\___  /    |______  /
-        \/                 \/ \/               \/     \/            \/ [v0.4.1]
+        \/                 \/ \/               \/     \/            \/ [v0.4.2]
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
@@ -415,6 +415,20 @@ resource :irrelevant_resource_name,
   r._id "ResourceNameOverride#{index+1}"
 end
 ```
+
+## Resource validation
+
+Rubycfn is shipped with a `CloudFormationResourceSpecification.json` file. It
+is used to validate whether used properties are valid and if any mandatory
+properties were omitted. The CloudFormation compiler will throw an error if
+a mandatory property is missing or if an unknown property is specified. Note
+that the CloudFormationResourceSpecification.json is not actively maintained
+by me. It is maintained by AWS at:
+
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html
+
+You can also place the `CloudFormationResourceSpecification.json` file in the
+root of your project. It will override the one supplied by Rubycfn.
 
 ## License
 
