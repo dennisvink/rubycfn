@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.4 (Next Release)
+## 0.4.5 (Next Release)
+
+## 0.4.4
+
+  * Added autocorrection to property names so that developers won't have to think about camel casing -- [@dennisvink][@dennisvink]
 
 ## 0.4.3
 
