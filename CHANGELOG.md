@@ -4,6 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.4 (Next Release)
 
+  * Added autocorrection to property names so that developers won't have to think about camel casing -- [@dennisvink][@dennisvink]
+
 ## 0.4.3
 
   * Fixed bug with property raise error causing confusing spec errors -- [@dennisvink][@dennisvink]
