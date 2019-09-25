@@ -20,6 +20,9 @@ Metrics/AbcSize:
     - "test/**/*"
     - "spec/**/*"
 
+Metrics/BlockNesting:
+  Enabled: false
+
 Metrics/ClassLength:
   Max: 500
   Exclude:
