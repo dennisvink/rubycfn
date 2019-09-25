@@ -235,7 +235,7 @@ module Rubycfn
                 end
                 rendered_properties.delete(k)
                 autocorrected_properties[autocorrected.to_sym] = v
-                puts "Need to correct #{k} to #{autocorrected}"
+                mandatory_properties.delete(autocorrected.to_s)
               end
               mandatory_properties.delete(k.to_s)
             end
