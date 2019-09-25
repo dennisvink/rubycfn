@@ -28,6 +28,39 @@ describe Rubycfn do
         r.property(:some_arn) { :rspec_resource.ref(:arn) }
         r.property(:some_other_arn) { :rspec_resource.ref("FooBar") }
       end
+
+      resource :asellion_com_database_instance,
+               type: "AWS::RDS::DBInstance" do |r|
+        r.property(:db_instance_identifier) { "rspec" }
+        r.property(:allocated_storage) { 100 }
+        r.property(:dbinstanceclass) { "db.t2.small" }
+        r.property(:engine) { "mariadb" }
+        r.property(:master_username) { "rspecroot" }
+        r.property(:master_user_password) { "rubycfn<3" }
+        r.property(:db_name) { "MyAwesomeDatabase" }
+        r.property(:preferred_backup_window) { "01:00-01:30" }
+        r.property(:backup_retention_period) { 14 }
+        r.property(:availability_zone) { "eu-central-1b" }
+        r.property(:preferred_maintenance_window) { "sun:06:00-sun:06:30" }
+        r.property(:multi_az) { true }
+        r.property(:engine_version) { "10.1.34" }
+        r.property(:auto_minor_version_upgrade) { true }
+        r.property(:license_model) { "general-public-license" }
+        r.property(:publicly_accessible) { true }
+        r.property(:storage_type) { "gp2" }
+        r.property(:port) { 3306 }
+        r.property(:copy_tags_to_snapshot) { true }
+        r.property(:monitoring_interval) { 60 }
+        r.property(:enable_iam_database_authentication) { false }
+        r.property(:enable_performance_insights) { false }
+        r.property(:deletion_protection) { true }
+        r.property(:db_subnet_group_name) { "default-vpc-123456789" }
+        r.property(:vpc_security_groups) do
+          [
+            "sg-0xc0ff3e"
+          ]
+        end
+      end
     end
   end
 
@@ -151,6 +184,24 @@ describe Rubycfn do
           subject { depends_on }
 
           it { should eq ["FooBar", "fooBar"] }
+        end
+      end
+
+      context "Database resource exists" do
+        subject { resources }
+
+        it { should have_key "AsellionComDatabaseInstance" }
+
+        context "Database resource has the right autocorrected properties" do
+          let(:properties) { resources["AsellionComDatabaseInstance"]["Properties"] }
+          subject { properties }
+
+          it { should have_key "DBInstanceClass" }
+          it { should have_key "DBInstanceIdentifier" }
+          it { should have_key "DBName" }
+          it { should have_key "DBSubnetGroupName" }
+          it { should have_key "MultiAZ" }
+          it { should have_key "VPCSecurityGroups" }
         end
       end
     end
