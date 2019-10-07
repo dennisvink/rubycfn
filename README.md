@@ -36,7 +36,7 @@ parameter :bucket_name,
 
 resource :foobar,
          type: "AWS::S3::Bucket" do |r|
-  r.property(:name) { :bucket_name.ref }
+  r.property(:bucket_name) { :bucket_name.ref }
 end
 ```
 
@@ -51,7 +51,7 @@ Both commands will output the CloudFormation template without the need for you t
 
 ## Setting up a Rubycfn project
 
-For projects that extend beyond a simnple stack or those that require unit
+For projects that extend beyond a simple stack or those that require unit
 testing you can create a Rubycfn project in the following way:  
 
 `rubycfn`
