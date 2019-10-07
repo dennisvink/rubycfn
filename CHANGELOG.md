@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.5 (Next Release)
+## 0.4.6 (Next Release)
+
+## 0.4.5
+
+  * Added `empty_string` method to allow for empty string as property value -- [@dennisvink][@dennisvink]
 
 ## 0.4.4
 
