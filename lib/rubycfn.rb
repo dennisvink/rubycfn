@@ -79,6 +79,10 @@ module Rubycfn
       TOPLEVEL_BINDING.eval("@mappings = @mappings.deep_merge(#{res})")
     end
 
+    def self.empty_string
+      "<emptyString>"
+    end
+
     def self.parameter(name, arguments)
       name = name.to_s.cfnize
       arguments[:type] ||= "String"
@@ -288,7 +292,7 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
-        JSON.pretty_generate(skeleton.recursive_compact)
+        JSON.pretty_generate(skeleton.recursive_compact).gsub("<emptyString>","")
       end
     end
   end
