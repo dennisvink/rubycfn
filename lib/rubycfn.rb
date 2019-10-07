@@ -292,7 +292,7 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
-        JSON.pretty_generate(skeleton.recursive_compact).gsub("<emptyString>","")
+        JSON.pretty_generate(skeleton.recursive_compact).gsub("<emptyString>", "")
       end
     end
   end
