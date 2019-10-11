@@ -4,6 +4,8 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.6 (Next Release)
 
+  * Added `rubycfn stack` command to add new stack quickly -- [@dennisvink][@dennisvink]
+
 ## 0.4.5
 
   * Added `empty_string` method to allow for empty string as property value -- [@dennisvink][@dennisvink]

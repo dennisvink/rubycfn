@@ -10,29 +10,51 @@ require_relative "../lib/cli_methods"
 
 # rubocop:disable Style/AndOr
 if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)) # rubocop:disable Style/Not
-  require "rubycfn"
-  require "active_support/concern"
-  module RubycfnStack
-    if ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?) # rubocop:disable Style/Not
-      # rubocop:enable Style/AndOr
-      contents = []
-      ARGF.each_line do |line|
-        contents.push(line)
+  if ARGV.class == Array && ARGV.first == "stack"
+    case ARGV.first
+    when "stack"
+      puts rubycfn_banner(Rubycfn::VERSION)
+      raise "Run `rubycfn stack` from project root folder" unless File.file? "lib/stacks/parent_stack/parent.rb"
+      prompt = TTY::Prompt.new
+      stack_name = prompt.ask("Stack name?", default: "application") do |q|
+        q.validate(/^([a-zA-Z]*)$/, "Invalid stack name")
       end
-      contents = contents.join("\n")
-    else
-      raise "File #{ARGV.first} not found!" unless File.file?(ARGV.first)
-      contents = File.read(ARGV.first)
+      stack_name = "#{stack_name.downcase}_stack"
+      raise "Stack already exists" if File.file? "lib/stacks/#{stack_name}.rb"
+      path = File.expand_path(File.dirname(File.dirname(__FILE__)))
+      new_stack = render("new_stack.rb", { stack_name: stack_name.split("_").collect(&:capitalize).join }, path)
+      new_concern = render("new_concern.rb", { stack_name: stack_name.split("_").collect(&:capitalize).join }, path)
+      File.open("lib/stacks/#{stack_name}.rb", "w") { |file| file.write(new_stack) }
+      FileUtils.mkdir_p "lib/stacks/#{stack_name}"
+      File.open("lib/stacks/#{stack_name}/my_module.rb", "w") { |file| file.write(new_concern) }
+      puts "Created stack. Don't forget to add it to lib/stacks/parent_stack/parent.rb !"
+      exit
     end
-    extend ActiveSupport::Concern
-    include Rubycfn
-    included do
-      eval(contents) # rubocop:disable Security/Eval
+  else
+    require "rubycfn"
+    require "active_support/concern"
+    module RubycfnStack
+      if ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?) # rubocop:disable Style/Not
+        # rubocop:enable Style/AndOr
+        contents = []
+        ARGF.each_line do |line|
+          contents.push(line)
+        end
+        contents = contents.join("\n")
+      else
+        raise "File #{ARGV.first} not found!" unless File.file?(ARGV.first)
+        contents = File.read(ARGV.first)
+      end
+      extend ActiveSupport::Concern
+      include Rubycfn
+      included do
+        eval(contents) # rubocop:disable Security/Eval
+      end
     end
+    cfn = include RubycfnStack # rubocop:disable Style/MixinUsage
+    puts cfn.render_template
+    exit
   end
-  cfn = include RubycfnStack # rubocop:disable Style/MixinUsage
-  puts cfn.render_template
-  exit
 end
 
 path = File.expand_path(File.dirname(File.dirname(__FILE__)))
@@ -72,7 +94,7 @@ dotenv_test = render(".env.test", { name: project_name }, path)
 dotenv_production = render(".env.production", { name: project_name }, path)
 dotenv_rspec = render(".env.rspec", { name: project_name }, path)
 ecs_stack = render("ecs_stack.rb", {}, path)
-ecs_stack_concern = render("ecs_Stack_concern.rb", { name: project_name }, path)
+ecs_stack_concern = render("ecs_stack_concern.rb", { name: project_name }, path)
 gemfile = render("Gemfile", { version: Rubycfn::VERSION }, path)
 gitignore = render(".gitignore", {}, path)
 global_variables = render("global_variables.rb", { name: project_name.downcase }, path)
