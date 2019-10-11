@@ -313,6 +313,10 @@ part of `VpcStack`. The second line defines the name of the module, in this case
 `Main`. The code beteen `included do` and `end` is the implementation of this
 module.
 
+Adding a new stack is trivial: Go to the root folder of the project and type
+`rubycfn stack`. This will prompt you for a stack name (do not include the 'stack' keyword)
+and it will generate the stack for you.
+
 ## AWS Intrinsic functions
 
 You can Ref by postpending the .ref method to any string or hash, e.g. :foobar.ref

@@ -1,0 +1,10 @@
+module <%= stack_name %>
+  module MyModule
+    extend ActiveSupport::Concern
+
+    included do
+      resource :sample_resource,
+               type: "AWS::SQS::Queue"
+    end
+  end
+end
