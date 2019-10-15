@@ -4,6 +4,15 @@ class Symbol
     to_s.split("_").map(&:capitalize).join
   end
 
+  def get_output(attr)
+    attr = attr.class == String ? attr : attr.to_s.split("_").map(&:capitalize).join
+    {
+      "Fn::GetAtt": [
+        to_s.split("_").map(&:capitalize).join, "Outputs.#{attr}"
+      ]
+    }
+  end
+
   def ref(attr = nil)
     unless attr
       return { Ref: to_s.split("_").map(&:capitalize).join }
@@ -42,6 +51,15 @@ class String
   def cfnize
     return self if self !~ /_/ && self =~ /[A-Z]+.*/
     split("_").map(&:capitalize).join
+  end
+
+  def get_output(attr)
+    attr = attr.class == String ? attr : attr.to_s.split("_").map(&:capitalize).join
+    {
+      "Fn::GetAtt": [
+        to_s.split("_").map(&:capitalize).join, "Outputs.#{attr}"
+      ]
+    }
   end
 
   def ref(attr = nil)
