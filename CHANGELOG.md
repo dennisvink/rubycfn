@@ -4,6 +4,7 @@ This project uses [Semantic Versioning](http://semver.org/).
 
 ## 0.4.6 (Next Release)
 
+  * Added `template` attribute to variables -- [@dennisvink][@dennisvink]
   * Added `rubycfn stack` command to add new stack quickly -- [@dennisvink][@dennisvink]
   * Added `get_output` method -- [@dennisvink][@dennisvink]
 
