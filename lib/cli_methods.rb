@@ -50,3 +50,22 @@ def rubycfn_structure(project_name)
     project_name + "/spec/lib"
   ]
 end
+
+def scaffold_stack
+  puts rubycfn_banner(Rubycfn::VERSION)
+  raise "Run `rubycfn stack` from project root folder" unless File.file? "lib/stacks/parent_stack/parent.rb"
+  prompt = TTY::Prompt.new
+  stack_name = prompt.ask("Stack name?", default: "application") do |q|
+    q.validate(/^([a-zA-Z]*)$/, "Invalid stack name")
+  end
+  stack_name = "#{stack_name.downcase}_stack"
+  raise "Stack already exists" if File.file? "lib/stacks/#{stack_name}.rb"
+  path = File.expand_path(File.dirname(File.dirname(__FILE__)))
+  new_stack = render("new_stack.rb", { stack_name: stack_name.split("_").collect(&:capitalize).join }, path)
+  new_concern = render("new_concern.rb", { stack_name: stack_name.split("_").collect(&:capitalize).join }, path)
+  File.open("lib/stacks/#{stack_name}.rb", "w") { |file| file.write(new_stack) }
+  FileUtils.mkdir_p "lib/stacks/#{stack_name}"
+  File.open("lib/stacks/#{stack_name}/my_module.rb", "w") { |file| file.write(new_concern) }
+  puts "Created stack. Don't forget to add it to lib/stacks/parent_stack/parent.rb !"
+  exit
+end

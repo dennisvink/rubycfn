@@ -1,0 +1,12 @@
+module <%= stack_name %>
+  extend ActiveSupport::Concern
+  include Rubycfn
+
+  included do
+    include Concerns::GlobalVariables
+    include Concerns::SharedMethods
+    include <%= stack_name %>::MyModule
+
+    description generate_stack_description("<%= stack_name %>")
+  end
+end

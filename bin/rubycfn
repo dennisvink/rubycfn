@@ -10,29 +10,36 @@ require_relative "../lib/cli_methods"
 
 # rubocop:disable Style/AndOr
 if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)) # rubocop:disable Style/Not
-  require "rubycfn"
-  require "active_support/concern"
-  module RubycfnStack
-    if ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?) # rubocop:disable Style/Not
-      # rubocop:enable Style/AndOr
-      contents = []
-      ARGF.each_line do |line|
-        contents.push(line)
+  if ARGV.class == Array && ARGV.first == "stack"
+    case ARGV.first
+    when "stack"
+      scaffold_stack
+    end
+  else
+    require "rubycfn"
+    require "active_support/concern"
+    module RubycfnStack
+      if ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?) # rubocop:disable Style/Not
+        # rubocop:enable Style/AndOr
+        contents = []
+        ARGF.each_line do |line|
+          contents.push(line)
+        end
+        contents = contents.join("\n")
+      else
+        raise "File #{ARGV.first} not found!" unless File.file?(ARGV.first)
+        contents = File.read(ARGV.first)
       end
-      contents = contents.join("\n")
-    else
-      raise "File #{ARGV.first} not found!" unless File.file?(ARGV.first)
-      contents = File.read(ARGV.first)
+      extend ActiveSupport::Concern
+      include Rubycfn
+      included do
+        eval(contents) # rubocop:disable Security/Eval
+      end
     end
-    extend ActiveSupport::Concern
-    include Rubycfn
-    included do
-      eval(contents) # rubocop:disable Security/Eval
-    end
+    cfn = include RubycfnStack # rubocop:disable Style/MixinUsage
+    puts cfn.render_template
+    exit
   end
-  cfn = include RubycfnStack # rubocop:disable Style/MixinUsage
-  puts cfn.render_template
-  exit
 end
 
 path = File.expand_path(File.dirname(File.dirname(__FILE__)))
@@ -72,7 +79,7 @@ dotenv_test = render(".env.test", { name: project_name }, path)
 dotenv_production = render(".env.production", { name: project_name }, path)
 dotenv_rspec = render(".env.rspec", { name: project_name }, path)
 ecs_stack = render("ecs_stack.rb", {}, path)
-ecs_stack_concern = render("ecs_Stack_concern.rb", { name: project_name }, path)
+ecs_stack_concern = render("ecs_stack_concern.rb", { name: project_name }, path)
 gemfile = render("Gemfile", { version: Rubycfn::VERSION }, path)
 gitignore = render(".gitignore", {}, path)
 global_variables = render("global_variables.rb", { name: project_name.downcase }, path)
