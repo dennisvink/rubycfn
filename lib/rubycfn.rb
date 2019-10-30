@@ -1,5 +1,6 @@
 # Rubycfn RubyCFN is a light-weight CloudFormation DSL
 require "active_support/concern"
+require "erb"
 require "json"
 require "neatjson"
 require "rubycfn/version"
@@ -125,6 +126,7 @@ module Rubycfn
       arguments[:required] ||= false
       arguments[:global] ||= false
       arguments[:filter] ||= nil
+      arguments[:template] ||= nil
 
       if arguments[:value].empty?
         arguments[:value] = arguments[:default]
@@ -137,6 +139,10 @@ module Rubycfn
 
       if arguments[:filter]
         arguments[:value] = send(arguments[:filter], arguments[:value])
+      end
+
+      if arguments[:template]
+        arguments[:value] = ERB.new("#{File.open(arguments[:template]).read}").result(binding)
       end
 
       res = {
@@ -292,7 +298,7 @@ module Rubycfn
         TOPLEVEL_BINDING.eval("@depends_on = []")
         TOPLEVEL_BINDING.eval("@description = ''")
         TOPLEVEL_BINDING.eval("@transform = ''")
-        JSON.pretty_generate(skeleton.recursive_compact).gsub("<emptyString>","")
+        JSON.pretty_generate(skeleton.recursive_compact).gsub("<emptyString>", "")
       end
     end
   end

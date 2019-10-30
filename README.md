@@ -61,7 +61,7 @@ __________ ____ __________________.___._________ _____________________
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
  |    |   \    |  / |    |   \\____   |\     \____|     \    |    |   \
  |____|_  /______/  |______  // ______| \______  /\___  /    |______  /
-        \/                 \/ \/               \/     \/            \/ [v0.4.5]
+        \/                 \/ \/               \/     \/            \/ [v0.4.6]
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
@@ -312,6 +312,10 @@ The first line is identical to the parent stack file and defines this module is
 part of `VpcStack`. The second line defines the name of the module, in this case
 `Main`. The code beteen `included do` and `end` is the implementation of this
 module.
+
+Adding a new stack is trivial: Go to the root folder of the project and type
+`rubycfn stack`. This will prompt you for a stack name (do not include the 'stack' keyword)
+and it will generate the stack for you.
 
 ## AWS Intrinsic functions
 
