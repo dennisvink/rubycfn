@@ -2,7 +2,9 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.6 (Next Release)
+## 0.4.7 (Next Release)
+
+## 0.4.6
 
   * Added `template` attribute to variables -- [@dennisvink][@dennisvink]
   * Added `rubycfn stack` command to add new stack quickly -- [@dennisvink][@dennisvink]
