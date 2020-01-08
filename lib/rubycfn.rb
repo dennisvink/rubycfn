@@ -6,18 +6,10 @@ require "neatjson"
 require "rubycfn/version"
 require_relative "monkeypatch"
 
-@description = ""
-@transform = ""
-@outputs = {}
-@parameters = {}
-@properties = {}
-@mappings = {}
-@conditions = {}
-@aws_resources = {}
+# Initialize variables
+@description = @transform = @resource_name = ""
+@outputs = @parameters = @properties = @mappings = @conditions = @aws_resources = @variables = @global_variables = {}
 @imports = []
-@resource_name = ""
-@variables = {}
-@global_variables = {}
 
 @resource_specification = JSON.parse(File.open(File.join(File.dirname(__FILE__), "/../CloudFormationResourceSpecification.json")).read)
 if File.file?("CloudFormationResourceSpecification.json")

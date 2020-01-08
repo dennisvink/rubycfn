@@ -221,4 +221,16 @@ class ::Hash
       ]
     }
   end
+
+  def fnsub(variable_map = nil)
+    unless variable_map
+      return { "Fn::Sub": self }
+    end
+    {
+      "Fn::Sub": [
+        self,
+        variable_map
+      ]
+    }
+  end
 end
