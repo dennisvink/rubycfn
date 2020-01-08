@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.7 (Next Release)
+## 0.4.8 (Next Release)
+
+## 0.4.7
+
+  * Added `fnsub` to Hash monkeypatch -- [@dennisvink][@dennisvink]
 
 ## 0.4.6
 
