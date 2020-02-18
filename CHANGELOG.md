@@ -2,7 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.8 (Next Release)
+## 0.4.9 (Next Release)
+
+## 0.4.8
+
+  * Allow for AWS::CDK::Metadata Resources -- [@dennisvink][@dennisvink]
+  * Added fnsub to Hash in monkeypatch.rb -- [@dennisvink][@dennisvink]
 
 ## 0.4.7
 
