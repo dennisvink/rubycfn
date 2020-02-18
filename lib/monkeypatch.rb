@@ -37,6 +37,15 @@ class Symbol
 end
 
 class Hash
+  def fnjoin(separator = "")
+    {
+      "Fn::Join": [
+        separator,
+        self
+      ]
+    }
+  end
+
   def fnsplit(separator = "")
     {
       "Fn::Split": [
@@ -230,6 +239,15 @@ class ::Hash
       "Fn::Sub": [
         self,
         variable_map
+      ]
+    }
+  end
+
+  def fnjoin(separator = "")
+    {
+      "Fn::Join": [
+        separator,
+        self
       ]
     }
   end

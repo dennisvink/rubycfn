@@ -182,7 +182,7 @@ module Rubycfn
       arguments[:cloud] ||= $1
       resource_specification = TOPLEVEL_BINDING.eval("@resource_specification")
 
-      raise "#{arguments[:type]} is not a valid resource type" unless resource_specification["ResourceTypes"][arguments[:type].to_s] || arguments[:type] =~ /Rspec\:\:/ || arguments[:type] =~ /^Custom\:\:/ || arguments[:type] =~ /AWS\:\:Serverless\:\:/
+      raise "#{arguments[:type]} is not a valid resource type" unless resource_specification["ResourceTypes"][arguments[:type].to_s] || arguments[:type] =~ /Rspec\:\:/ || arguments[:type] =~ /^Custom\:\:/ || arguments[:type] =~ /AWS\:\:Serverless\:\:/ || arguments[:type] =~ /\:\:CDK/
 
       # Custom resource types are AWS resources
       if arguments[:cloud] == "Custom" || arguments[:cloud] == "Rspec"
