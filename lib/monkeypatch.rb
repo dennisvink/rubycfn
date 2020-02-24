@@ -103,12 +103,6 @@ class String
     }
   end
 
-  def fnbase64
-    {
-      "Fn::Base64": self
-    }
-  end
-
   def fngetazs
     {
       "Fn::GetAZs": self
@@ -240,6 +234,12 @@ class ::Hash
         self,
         variable_map
       ]
+    }
+  end
+
+  def fnbase64
+    {
+      "Fn::Base64": self
     }
   end
 
