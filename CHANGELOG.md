@@ -2,7 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.4.9 (Next Release)
+## 0.4.10 (Next Release)
+
+## 0.4.9
+
+  * Added fnbase64 to Hash monkeypatch -- [@dennisvink][@dennisvink]
+  * Updated README.md
 
 ## 0.4.8
 

@@ -61,7 +61,7 @@ __________ ____ __________________.___._________ _____________________
  |       _/    |   /|    |  _//   |   |/    \  \/ |    __)   |    |  _/
  |    |   \    |  / |    |   \\____   |\     \____|     \    |    |   \
  |____|_  /______/  |______  // ______| \______  /\___  /    |______  /
-        \/                 \/ \/               \/     \/            \/ [v0.4.8]
+        \/                 \/ \/               \/     \/            \/ [v0.4.9]
 Project name? example
 Account ID? 1234567890
 Select region EU (Frankfurt)
@@ -434,11 +434,19 @@ https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-spec
 You can also place the `CloudFormationResourceSpecification.json` file in the
 root of your project. It will override the one supplied by Rubycfn.
 
+## Authors
+
+Dennis Vink
+
+Contributors:
+* Leon Rodenburg
+
 ## License
 
 MIT License
 
 Copyright (c) 2019 Dennis Vink
+
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
