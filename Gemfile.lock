@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubycfn (0.4.9)
+    rubycfn (0.4.10)
       activesupport (~> 5.1.5)
       dotenv (~> 2.4.0)
       json (~> 2.1.0)
@@ -46,8 +46,8 @@ GEM
     i18n (1.8.2)
       concurrent-ruby (~> 1.0)
     json (2.1.0)
-    launchy (2.4.3)
-      addressable (~> 2.3)
+    launchy (2.5.0)
+      addressable (~> 2.7)
     listen (3.2.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
@@ -67,7 +67,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
     public_suffix (4.0.3)
-    rake (10.5.0)
+    rake (13.0.1)
     rb-fsevent (0.10.3)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
@@ -93,10 +93,10 @@ GEM
     rspec_junit_formatter (0.4.1)
       rspec-core (>= 2, < 4, != 2.12.0)
     shellany (0.0.1)
-    simplecov (0.18.3)
+    simplecov (0.18.5)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
-    simplecov-html (0.12.1)
+    simplecov-html (0.12.2)
     sorcerer (2.0.1)
     thor (1.0.1)
     thread_safe (0.3.6)
@@ -123,15 +123,18 @@ PLATFORMS
 
 DEPENDENCIES
   awesome_print (~> 1.2)
-  bundler (~> 1.7)
+  bundler (~> 2.1)
   guard (~> 2.6)
   guard-rspec (~> 4.3)
   launchy (~> 2.4)
   pry (~> 0.10)
-  rake (~> 10.3)
+  rake (>= 12.3.3)
   rspec (~> 3.2)
   rspec-given (~> 3.7)
   rspec-its (~> 1.2)
   rspec_junit_formatter (~> 0.2)
   rubycfn!
   simplecov (~> 0.9)
+
+BUNDLED WITH
+   2.1.4
