@@ -103,7 +103,8 @@ module Rubycfn
       param = {
         "Description": arguments[:description],
         "Value": arguments[:value],
-        "Export": arguments[:export]
+        "Export": arguments[:export],
+        "Condition": arguments[:condition]
       }.compact
       res = {
         "#{name}": param
