@@ -13,7 +13,7 @@ if ARGV.first || (ARGF.filename != "-" or (not STDIN.tty? and not STDIN.closed?)
   if ARGV.class == Array && ARGV.first == "stack"
     case ARGV.first
     when "stack"
-      scaffold_stack
+      puts "Scaffolding will be reintroduced later."
     end
   else
     require "rubycfn"
