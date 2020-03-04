@@ -2,9 +2,12 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.5.0 (Next Release)
+## 0.5.1 (Next Release)
+
+## 0.5.0
 
   * Restructuring project -- [@dennisvink][@dennisvink]
+  * Disabled scaffolding -- [@dennisvink][@dennisvink]
 
 ## 0.4.10
 

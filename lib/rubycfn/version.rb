@@ -1,4 +1,4 @@
 # Rubycfn version
 module Rubycfn
-  VERSION = "0.4.10".freeze
+  VERSION = "0.5.0".freeze
 end
