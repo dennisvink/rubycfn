@@ -1,5 +1,5 @@
-def render(file, vars, path)
-  template = File.read("#{path}/templates/#{file}.erb")
+def render(file, vars)
+  template = File.read(file)
   ERB.new(template).result(OpenStruct.new(vars).instance_eval { binding })
 end
 

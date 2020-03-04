@@ -1,0 +1,65 @@
+environments:
+  rspec:
+    vpc_cidr: 192.168.0.0/16
+    stack_name: rspec-devops
+    domain_name: "rspec.io"
+    no_subdomain: true
+  development:
+    vpc_cidr: 10.10.0.0/16
+    stack_name: development-devops
+  test:
+    vpc_cidr: 10.20.0.0/16
+    stack_name: test-devops
+  acceptance:
+    vpc_cidr: 10.30.0.0/16
+    stack_name: acceptance-devops
+  production:
+    vpc_cidr: 10.40.0.0/16
+    stack_name: production-devops
+subnets:
+  - ec2_public:
+      owner: infra
+      public: true
+      offset: 1
+      deploy_nat: true
+      output_cidr: false
+  - ec2_private:
+      owner: infra
+      public: false
+      offset: 2
+      deploy_nat: false
+      output_cidr: false
+  - backend_rds_public:
+      owner: infra
+      public: true
+      offset: 3
+      deploy_nat: false
+      output_cidr: false
+  - backend_rds_private:
+      owner: infra
+      public: false
+      offset: 4
+      deploy_nat: false
+      output_cidr: false
+applications:
+  hello-world:
+    image: nginxdemos/hello
+    container_port: 80
+    priority: 2
+    min: 2
+    max: 8
+    mem: 128
+    env:
+      SOME_ENV_VAR: Exposed
+      SOME_OTHER_VAR: desopxE
+  hello-world2:
+    image: tutum/hello-world
+    container_port: 80
+    priority: 3
+    min: 2
+    max: 8
+    mem: 128
+    env:
+      SOME_ENV_VAR: Exposed
+      SOME_OTHER_VAR: desopxE
+domain_name: "example.com"
