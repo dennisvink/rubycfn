@@ -16,11 +16,12 @@ __________ ____ __________________.___._________ _____________________
 
 ## Rake commands
 
-`rake` - Compile the code into CloudFormation templates and run unit tests
+`rake` - Retrieve required outputs from DependencyStack, Compile the code into CloudFormation templates and run unit tests
 `rake init` - Deploy the DependencyStack in the AWS account
 `rake compile` - Compile the code into CloudFormation templates
 `rake spec` - Run unit tests
 `rake upload` - Upload the CloudFormation templates to s3
+`rake update` - Save required outputs from DependencyStack to .env.dependencies
 `rake apply` - Deploy the CloudFormation templates
 
 ## Stack configuration

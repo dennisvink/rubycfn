@@ -8,7 +8,7 @@ require_relative "../aws_helper/main"
 
 Dotenv.load(".env.private")
 Dotenv.load(".env.dependencies")
-raise "CLOUDFORMATIONBUCKET not found in DependencyStack outputs" unless ENV["CLOUDFORMATIONBUCKET"]
+raise "CLOUDFORMATIONBUCKET not set. Run `rake init` and `rake update` first!" unless ENV["CLOUDFORMATIONBUCKET"]
 
 env_vars = load_env_vars
 
