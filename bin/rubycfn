@@ -61,8 +61,8 @@ region = prompt.select(
 )
 
 render_args = {
-  project_name: project_name,
   account_id: account_id,
+  project_name: project_name,
   region: region,
   version: Rubycfn::VERSION
 }
