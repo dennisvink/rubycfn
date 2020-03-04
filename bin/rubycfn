@@ -63,19 +63,22 @@ region = prompt.select(
 render_args = {
   project_name: project_name,
   account_id: account_id,
-  region: region
+  region: region,
+  version: Rubycfn::VERSION
 }
 
-Dir.glob("templates/**/*").each do |f|
+FileUtils.mkdir_p project_path
+
+Dir.glob("#{path}/templates/**/*", File::FNM_DOTMATCH).each do |f|
   if File.directory?(f)
-    dir = f.gsub("templates/","")
+    dir = f.gsub("#{path}/templates/","")
     FileUtils.mkdir_p "#{project_path}/#{dir}"
   end
 end
 
-Dir.glob("templates/**/*").each do |f|
+Dir.glob("#{path}/templates/**/*", File::FNM_DOTMATCH).each do |f|
   unless File.directory?(f)
-    file = f.gsub("templates/","")
+    file = f.gsub("#{path}/templates/","")
     contents = render(f, render_args)
     File.open("#{project_path}/#{file}", "w") { |file| file.write(contents) }
   end
