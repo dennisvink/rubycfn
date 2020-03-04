@@ -45,7 +45,6 @@ def get_parent_stack_s3_location(bucket, environment)
     JSON.parse(stack)["Resources"].each do |_resource, payload|
       if payload["Type"] == "AWS::CloudFormation::Stack"
         parent_stack = stack_name
-        json_file = "build/#{environment}-#{stack_name.downcase}.json"
         file_hash = git_revision
         break
       end

@@ -51,7 +51,8 @@ RuboCop::RakeTask.new(:rubocop) do |t|
   t.options = ["--display-cop-names"]
 end
 
-task default: %i(dependencies compile_stack spec)
-task compile: %i(dependencies compile_stack)
-task upload: %i(dependencies upload_stack)
 task apply: %i(dependencies apply_stack)
+task compile: %i(compile_stack)
+task default: %i(dependencies compile_stack spec)
+task update: %i(dependencies)
+task upload: %i(dependencies upload_stack)
