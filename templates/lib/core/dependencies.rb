@@ -15,11 +15,12 @@ begin
   res = client.describe_stacks(
     stack_name: "DependencyStack"
   )
-rescue Aws::CloudFormation::Errors::InvalidClientTokenId
-  raise "ERROR: Your AWS credentials are not set or invalid."
+rescue Aws::CloudFormation::Errors::InvalidClientTokenId, Aws::CloudFormation::Errors::ValidationError => e
+  puts "E: #{e.class}"
+  raise "ERROR: Your AWS credentials are not set or invalid." if e.class == Aws::CloudFormation::Errors::InvalidClientTokenId
+  raise "ERROR: DependencyStack does not exist. Run `rake init` first!" if e.class == Aws::CloudFormation::Errors::ValidationError
 end
 
-raise "ERROR: .env.dependencies does not exist. Run `rake init` and `rake dependencies` first!" unless File.file?(".env.dependencies")
 dep_file = File.open(".env.dependencies", "w")
 res[:stacks].each do |stack|
   stack[:outputs].each do |output|
