@@ -2,15 +2,19 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.5.2 (Next Release)
+## 0.5.3 (Next Release)
+
+## 0.5.2
+
+  * Fixed bug in lib/core/dependencies.rb that incorrectly raised error -- [@dennisvink][@dennisvink]
 
 ## 0.5.1
 
   * Added descriptive error messages for common errors -- [@dennisvink][@dennisvink]
-  * Allow `rake compile` to succeed with mock .env.dependency.rspec values
-  * Added `rake update` command
-  * Removed a stray unused variable in template code
-  * Update README.md
+  * Allow `rake compile` to succeed with mock .env.dependency.rspec values -- [@dennisvink][@dennisvink]
+  * Added `rake update` command -- [@dennisvink][@dennisvink]
+  * Removed a stray unused variable in template code -- [@dennisvink][@dennisvink]
+  * Update README.md -- [@dennisvink][@dennisvink]
 
 ## 0.5.0
 
