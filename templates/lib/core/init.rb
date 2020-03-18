@@ -65,7 +65,7 @@ module Project<%= project_name %>DependencyStack
   include Rubycfn
 
   included do
-    description "<%= project_name %>Dependency Stack"
+    description "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}Dependency Stack"
 
     parameter :environment,
               description: "Environment name",
@@ -125,7 +125,7 @@ client = Aws::CloudFormation::Client.new
 stack_exists = false
 previous_statuses = []
 80.times do
-  previous_events = get_prior_events(client, "<%= project_name %>DependencyStack")
+  previous_events = get_prior_events(client, "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack")
   previous_statuses = previous_events.map(&:event_id)
   stack_exists = previous_events.size.to_i.positive? ? true : false
   break unless stack_exists
@@ -133,8 +133,8 @@ previous_statuses = []
   events_last_deploy = get_events_last_deploy(previous_events)
   last_event = events_last_deploy.shift
   break if last_event \
-    && (last_event.logical_resource_id == "<%= project_name %>DependencyStack") \
-    && (last_event.stack_name == "<%= project_name %>DependencyStack") \
+    && (last_event.logical_resource_id == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
+    && (last_event.stack_name == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
     && (DEPLOYABLE_STATES.include? last_event.resource_status)
   puts "Stack is currently in #{last_event.resource_status} mode. Waiting for it to finish..." if last_event
   sleep 15
@@ -155,7 +155,7 @@ parameters = [
 
 if stack_exists
   client.update_stack(
-    stack_name: "<%= project_name %>DependencyStack",
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack",
     template_body: template,
     capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
     parameters: parameters,
@@ -168,7 +168,7 @@ if stack_exists
   )
 else
   client.create_stack(
-    stack_name: "<%= project_name %>DependencyStack",
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack",
     template_body: template,
     timeout_in_minutes: 60,
     capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
@@ -188,7 +188,7 @@ shown_log_lines = {}
 
 360.times do
   resp = client.describe_stack_events(
-    stack_name: "<%= project_name %>DependencyStack"
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack"
   )
   resp.stack_events.to_a.reverse.each_with_index do |event, index|
     next if previous_statuses.include? event.event_id
@@ -203,8 +203,8 @@ shown_log_lines = {}
                "#{@resource_status.white} #{@resource_status_reason.to_s.red}"
     puts log_line unless shown_log_lines[log_line]
     shown_log_lines[log_line] = true
-    if (@stack_name == "<%= project_name %>DependencyStack") \
-      && (@logical_resource_id == "<%= project_name %>DependencyStack") \
+    if (@stack_name == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
+      && (@logical_resource_id == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
       && (END_STATES.include? @resource_status) \
       && (index + 1 == resp.stack_events.to_a.size)
       @completed = true
