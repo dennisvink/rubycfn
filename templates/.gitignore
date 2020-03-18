@@ -83,5 +83,9 @@ attic/
 /venv
 /Gemfile.lock
 .env.dependencies
+.env.dependencies.development
+.env.dependencies.test
+.env.dependencies.acceptance
+.env.dependencies.production
 CloudFormationResourceSpecification.json
 config.json
