@@ -11,14 +11,7 @@ def upload_stacks
     env_vars[:aws_secret_access_key]
   )
 
-  begin
-    s3 = create_bucket_if_not_exists(
-      env_vars[:aws_region],
-      env_vars[:artifact_bucket]
-    )
-  rescue => e
-    puts "Exception create_bucket_if_not_exists #{e}"
-  end
+  s3 = Aws::S3::Resource.new(region: env_vars[:aws_region])
 
   stacks = compile_stacks(true)
   raise "CLOUDFORMATIONBUCKET not found in <%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack outputs" unless ENV["CLOUDFORMATIONBUCKET"]
