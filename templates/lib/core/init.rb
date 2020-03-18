@@ -60,7 +60,7 @@ subdomain, domain_name = read_domain_name
 raise "ENVIRONMENT not set" unless ENV["ENVIRONMENT"]
 warn "WARNING: domain_name not set in config.yaml... Route53 Hosted Zone will not be created" if domain_name.empty?
 
-module <%= project_name %>DependencyStack
+module Project<%= project_name %>DependencyStack
   extend ActiveSupport::Concern
   include Rubycfn
 
@@ -117,7 +117,7 @@ module <%= project_name %>DependencyStack
   end
 end
 
-stack = include <%= project_name %>DependencyStack # rubocop:disable Style/MixinUsage
+stack = include Project<%= project_name %>DependencyStack # rubocop:disable Style/MixinUsage
 template = stack.render_template
 
 client = Aws::CloudFormation::Client.new
