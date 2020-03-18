@@ -2,7 +2,11 @@
 All notable changes to Rubycfn will be documented in this file.
 This project uses [Semantic Versioning](http://semver.org/).
 
-## 0.5.3 (Next Release)
+## 0.5.4 (Next Release)
+
+## 0.5.3
+
+  * Improved code quality in templated files -- [@dennisvink][@dennisvink]
 
 ## 0.5.2
 
