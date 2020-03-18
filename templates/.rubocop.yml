@@ -102,3 +102,6 @@ Metrics/PerceivedComplexity:
 
 Style/EvalWithLocation:
   Enabled: false
+
+Style/PerlBackrefs:
+  Enabled: false
