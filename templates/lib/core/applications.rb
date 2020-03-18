@@ -1,44 +1,97 @@
+def to_bool(val)
+  return false unless val.nil? || val.empty?
+  return false unless val != "true"
+  true
+end
+
+def env_vars_to_array(val)
+  if val.nil? || val.empty?
+    return [
+      {
+        Name: "WITHOUT_ENV",
+        Value: "true"
+      }
+    ]
+  end
+  vars = []
+
+  # Create an array of variables to pass to this application.
+  # Resolve any references to its intrinsic function.
+  val.keys.each_with_index do |object, index|
+    value = val.values[index].class == Symbol && Kernel.class_eval(":#{val.values[index]}") || val.values[index]
+
+    # Support ${ENV_VAR} in config_yaml
+    if value =~ /\$\{([^\}]*)\}/
+      capture = $1
+      value = ENV[capture]
+    end
+
+    vars.push(
+      Name: object,
+      Value: value
+    )
+  end
+  vars
+end
+
+# Return the mandatory Stack parameters and add all defined ENV vars from config.yaml
+def parent_parameters(env_vars)
+  params = {
+    "Vpc": :vpc_stack.ref("Outputs.Vpc"),
+    "Cluster": :ecs_stack.ref("Outputs.EcsCluster"),
+    "Listener": :ecs_stack.ref("Outputs.EcsLoadBalancerListener"),
+    "EcsServiceAutoScalingRoleArn": :ecs_stack.ref("Outputs.EcsAutoScalingRoleArn"),
+    "HostedZoneId": "HOSTEDZONEID".ref,
+    "HostedZoneName": "HOSTEDZONENAME".ref,
+    "LoadBalancerDnsName": :ecs_stack.ref("Outputs.EcsLoadBalancerUrl"),
+    "CanonicalHostedZoneId": :ecs_stack.ref("Outputs.EcsLoadBalancerHostedZoneId"),
+    "CertificateProviderFunctionArn": :acm_stack.ref("Outputs.CertificateProviderFunctionArn"),
+    "ApplicationDeploymentFailureRollbackFunctionArn": :ecs_stack.ref("Outputs.ApplicationDeploymentFailureRollbackFunctionArn")
+  }
+
+  env_vars.each do |var|
+    params[var[:Name].cfnize] = var[:Value]
+  end
+  params
+end
+
+def application_parameters(env_vars)
+  vars = []
+
+  env_vars.each do |var|
+    vars.push(
+      Name: var[:Name],
+      Value: var[:Name].cfnize.ref
+    )
+  end
+  vars
+end
+
 # Generate nested stacks for each defined application, and create module dynamically.
 def create_applications
+  return if infra_config["environments"][environment]["cluster_size"].nil? || infra_config["environments"][environment]["cluster_size"].to_i.zero?
   resource :applications_stack,
            amount: infra_config["applications"].count,
            type: "AWS::CloudFormation::Stack" do |r, index|
+    env_vars = env_vars_to_array(infra_config["applications"].values[index]["env"])
+    application_vars = application_parameters(env_vars) # rubocop:disable Lint/UselessAssignment
     name = infra_config["applications"].keys[index]
     resource_name = name.tr("-", "_").cfnize
     simple_name = resource_name.downcase
     app_config = infra_config["applications"].values[index]
-    warn "App config is empty" unless app_config # Rubocop didn't understand that the variable is actually used.
-    #       request_certificate("Gateway", gateway_domains[environment], :asellion_com_hosted_zone_id.ref, "us-east-1")
+    is_essential = to_bool(app_config["essential"].to_s)
 
     r._id("#{resource_name}Stack")
     r.property(:template_url) { "#{simple_name}stack" }
-    r.property(:parameters) do
-      {
-        "Vpc": :vpc_stack.ref("Outputs.SfsVpc"),
-        "Cluster": :ecs_stack.ref("Outputs.SfsEcsCluster"),
-        "Listener": :ecs_stack.ref("Outputs.EcsLoadBalancerListener"),
-        "EcsServiceAutoScalingRoleArn": :ecs_stack.ref("Outputs.SfsEcsAutoScalingRoleArn"),
-        "HostedZoneId": :route53_stack.ref("Outputs.HostedZoneId"),
-        "HostedZoneName": :route53_stack.ref("Outputs.HostedZoneName"),
-        "LoadBalancerDnsName": :ecs_stack.ref("Outputs.EcsLoadBalancerUrl"),
-        "CanonicalHostedZoneId": :ecs_stack.ref("Outputs.EcsLoadBalancerHostedZoneId"),
-        "CertificateProviderFunctionArn": :acm_stack.ref("Outputs.CertificateProviderFunctionArn")
-      }
-    end
+    r.property(:parameters) { parent_parameters(env_vars) }
     Object.const_set("#{resource_name}Stack", Module.new).class_eval <<-RUBY
       extend ActiveSupport::Concern
       include Rubycfn
 
       included do
-        def env_vars_to_array(val)
-          vars = []
-          val.keys.each_with_index do |object, index|
-            vars.push(
-              Name: object,
-              Value: val.values[index]
-            )
-          end
-          vars
+
+        application_vars.each do |var|
+          Object.class_eval("parameter var[:Name].to_sym, description: 'Value for ENV var \#{var[:Name]}'")
         end
 
         parameter :vpc,
@@ -77,6 +130,10 @@ def create_applications
                   description: "ARN of certificate provider",
                   type: "String"
 
+        parameter :application_deployment_failure_rollback_function_arn,
+                  description: "ARN of ECS deployment failure Lambda",
+                  type: "String"
+
         variable :min,
                  value: app_config["min"].to_s
 
@@ -103,7 +160,7 @@ def create_applications
         description generate_stack_description("#{resource_name}Stack")
         resource :service,
                  type: "AWS::ECS::Service" do |r|
-
+          r.property(:service_name) { "#{environment}-<%= project_name %>-#{simple_name}" }
           r.property(:cluster) { :cluster.ref }
           r.property(:role) { :service_role.ref }
           r.property(:desired_count) { min.to_i }
@@ -117,6 +174,14 @@ def create_applications
           end
         end
 
+        resource :application_deployment_health,
+                 type: "Custom::EcsDeploymentCheck" do |r|
+          r.property(:service_token) { :application_deployment_failure_rollback_function_arn.ref }
+          r.property("AWSRegion") { "${AWS::Region}".fnsub }
+          r.property(:service) { "#{environment}-<%= project_name %>-#{simple_name}" }
+          r.property(:cluster) { :cluster.ref }
+        end
+
         resource :task_definition,
                  type: "AWS::ECS::TaskDefinition" do |r|
           r.property(:family) { "#{simple_name}-service" }
@@ -124,10 +189,10 @@ def create_applications
             [
               {
                 "Name": "#{simple_name}-service",
-                "Essential": true,
+                "Essential": #{is_essential},
                 "Image": image,
                 "Memory": memory.to_i,
-                "Environment": env_vars,
+                "Environment": application_vars,
                 "PortMappings": [
                   {
                     "ContainerPort": container_port.to_i
@@ -233,6 +298,27 @@ def create_applications
                         "elasticloadbalancing:DescribeTargetGroups",
                         "elasticloadbalancing:DescribeTargetHealth",
                         "elasticloadbalancing:RegisterTargets"
+                      ],
+                      "Resource": "*"
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "ec2:DescribeTags",
+                        "ecs:CreateCluster",
+                        "ecs:DeregisterContainerInstance",
+                        "ecs:DiscoverPollEndpoint",
+                        "ecs:Poll",
+                        "ecs:RegisterContainerInstance",
+                        "ecs:StartTelemetrySession",
+                        "ecs:UpdateContainerInstancesState",
+                        "ecs:Submit*",
+                        "ecr:GetAuthorizationToken",
+                        "ecr:BatchCheckLayerAvailability",
+                        "ecr:GetDownloadUrlForLayer",
+                        "ecr:BatchGetImage",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
                       ],
                       "Resource": "*"
                     }
@@ -402,7 +488,10 @@ def create_applications
         end
 
         resource :cloudfront_distribution,
-                 depends_on: :ecs_application_issued_certificate,
+                 depends_on: [
+                   :ecs_application_issued_certificate,
+                   :application_deployment_health
+                 ],
                  type: "AWS::CloudFront::Distribution" do |r|
           r.property(:distribution_config) do
             {

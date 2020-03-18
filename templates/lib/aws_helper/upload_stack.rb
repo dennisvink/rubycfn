@@ -21,7 +21,7 @@ def upload_stacks
   end
 
   stacks = compile_stacks(true)
-  raise "CLOUDFORMATIONBUCKET not found in DependencyStack outputs" unless ENV["CLOUDFORMATIONBUCKET"]
+  raise "CLOUDFORMATIONBUCKET not found in <%= project_name %>DependencyStack outputs" unless ENV["CLOUDFORMATIONBUCKET"]
   stacks.each do |stack_name, stack|
     next if JSON.parse(stack)["Resources"].nil?
     hash = @stack_hashes[stack_name.to_sym]

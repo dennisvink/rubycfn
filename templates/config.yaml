@@ -52,6 +52,9 @@ applications:
     env:
       SOME_ENV_VAR: Exposed
       SOME_OTHER_VAR: desopxE
+      # SOME_REFFED_VAR: :foobar.ef
+      # SOME_OTHER_STACK_VAR: :vpc_stack.ref("Outputs.VpcId")
+      # SOME_ENV_VAR: ${MY_ENV_VAR}
   hello-world2:
     image: tutum/hello-world
     container_port: 80

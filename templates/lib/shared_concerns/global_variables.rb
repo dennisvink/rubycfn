@@ -6,7 +6,7 @@ module Concerns
 
     included do
       def load_config(_val)
-        config = YAML.safe_load(File.read("config.yaml"))
+        config = YAML.safe_load(File.read("config.yaml"), [Symbol])
         config["applications"] ||= {}
         config["environments"] ||= {}
         config["subnets"] ||= {}
