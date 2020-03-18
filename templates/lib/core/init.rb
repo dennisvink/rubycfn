@@ -30,7 +30,7 @@ def inject_dummy_resource(stack)
 end
 
 def read_domain_name
-  config = YAML.safe_load(File.read("config.yaml"))
+  config = YAML.safe_load(File.read("config.yaml"), [Symbol])
   config["applications"] ||= {}
   config["environments"] ||= {}
   config["subnets"] ||= {}
@@ -60,16 +60,64 @@ subdomain, domain_name = read_domain_name
 raise "ENVIRONMENT not set" unless ENV["ENVIRONMENT"]
 warn "WARNING: domain_name not set in config.yaml... Route53 Hosted Zone will not be created" if domain_name.empty?
 
-module DependencyStack
+module Project<%= project_name %>DependencyStack
   extend ActiveSupport::Concern
   include Rubycfn
 
   included do
-    self.class_eval(File.open("bootstrap/dependency_stack.rb").read)
+    description "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}Dependency Stack"
+
+    parameter :environment,
+              description: "Environment name",
+              type: "String"
+
+    parameter :domain_name,
+              description: "Domain name",
+              type: "String"
+
+    condition :has_environment,
+              [["", :environment.ref].fnequals].fnnot
+
+    condition :has_domain_name,
+              [["", :domain_name.ref].fnequals].fnnot
+
+    %i(
+      artifact_bucket
+      cloudformation_bucket
+      lambda_bucket
+      logging_bucket
+    ).each do |bucket|
+      resource bucket,
+               deletion_policy: "Retain",
+               update_replace_policy: "Retain",
+               type: "AWS::S3::Bucket"
+
+      output bucket,
+             value: bucket.ref
+    end
+
+    resource :hosted_zone,
+             condition: "HasDomainName",
+             type: "AWS::Route53::HostedZone" do |r|
+      r.property(:hosted_zone_config) do
+        {
+          "Comment": ["Hosted zone for ", ["HasEnvironment", [:environment.ref, "."].fnjoin, ""].fnif, :domain_name.ref].fnjoin
+        }
+      end
+      r.property(:name) { [["HasEnvironment", [:environment.ref, "."].fnjoin, ""].fnif, :domain_name.ref].fnjoin }
+    end
+
+    output :hosted_zone_id,
+           condition: "HasDomainName",
+           value: :hosted_zone.ref
+
+    output :hosted_zone_name,
+           condition: "HasDomainName",
+           value: [["HasEnvironment", [:environment.ref, "."].fnjoin, ""].fnif, :domain_name.ref].fnjoin
   end
 end
 
-stack = include DependencyStack # rubocop:disable Style/MixinUsage
+stack = include Project<%= project_name %>DependencyStack # rubocop:disable Style/MixinUsage
 template = stack.render_template
 
 client = Aws::CloudFormation::Client.new
@@ -77,7 +125,7 @@ client = Aws::CloudFormation::Client.new
 stack_exists = false
 previous_statuses = []
 80.times do
-  previous_events = get_prior_events(client, "DependencyStack")
+  previous_events = get_prior_events(client, "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack")
   previous_statuses = previous_events.map(&:event_id)
   stack_exists = previous_events.size.to_i.positive? ? true : false
   break unless stack_exists
@@ -85,8 +133,8 @@ previous_statuses = []
   events_last_deploy = get_events_last_deploy(previous_events)
   last_event = events_last_deploy.shift
   break if last_event \
-    && (last_event.logical_resource_id == "DependencyStack") \
-    && (last_event.stack_name == "DependencyStack") \
+    && (last_event.logical_resource_id == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
+    && (last_event.stack_name == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
     && (DEPLOYABLE_STATES.include? last_event.resource_status)
   puts "Stack is currently in #{last_event.resource_status} mode. Waiting for it to finish..." if last_event
   sleep 15
@@ -107,7 +155,7 @@ parameters = [
 
 if stack_exists
   client.update_stack(
-    stack_name: "DependencyStack",
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack",
     template_body: template,
     capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
     parameters: parameters,
@@ -120,7 +168,7 @@ if stack_exists
   )
 else
   client.create_stack(
-    stack_name: "DependencyStack",
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack",
     template_body: template,
     timeout_in_minutes: 60,
     capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
@@ -140,7 +188,7 @@ shown_log_lines = {}
 
 360.times do
   resp = client.describe_stack_events(
-    stack_name: "DependencyStack"
+    stack_name: "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack"
   )
   resp.stack_events.to_a.reverse.each_with_index do |event, index|
     next if previous_statuses.include? event.event_id
@@ -155,8 +203,8 @@ shown_log_lines = {}
                "#{@resource_status.white} #{@resource_status_reason.to_s.red}"
     puts log_line unless shown_log_lines[log_line]
     shown_log_lines[log_line] = true
-    if (@stack_name == "DependencyStack") \
-      && (@logical_resource_id == "DependencyStack") \
+    if (@stack_name == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
+      && (@logical_resource_id == "<%= project_name %>#{ENV["ENVIRONMENT"].capitalize}DependencyStack") \
       && (END_STATES.include? @resource_status) \
       && (index + 1 == resp.stack_events.to_a.size)
       @completed = true

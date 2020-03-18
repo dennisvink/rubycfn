@@ -2,7 +2,7 @@ require "git-revision"
 
 def update_references(contents, environment, _artifact_bucket)
   Dotenv.load(".env.private")
-  Dotenv.load(".env.dependencies")
+  Dotenv.load(".env.dependencies.#{ENV["ENVIRONMENT"]}")
   contents["Resources"].map do |resource|
     resource_name = resource.shift
     resource_values = resource.shift
