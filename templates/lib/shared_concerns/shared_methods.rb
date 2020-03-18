@@ -35,8 +35,8 @@ module Concerns
       end
 
       def generate_bootstrap_parameters
-        warn "WARNING: .env.dependencies does not exist. Run `rake dependencies` first!" unless File.file?(".env.dependencies")
-        filename = File.file?(".env.dependencies") && ".env.dependencies#{environment == "rspec" && ".rspec" || ""}" || ".env.dependencies.rspec"
+        warn "WARNING: .env.dependencies.#{ENV["ENVIRONMENT"]} does not exist. Run `rake dependencies` first!" unless File.file?(".env.dependencies")
+        filename = File.file?(".env.dependencies.#{ENV["ENVIRONMENT"]}") && ".env.dependencies#{environment == "rspec" && ".rspec" || ""}" || ".env.dependencies.rspec"
         File.open(filename).read.each_line do |line|
           line.strip!
           param, _value = line.split("=")

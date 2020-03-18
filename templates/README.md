@@ -21,7 +21,7 @@ __________ ____ __________________.___._________ _____________________
 `rake compile` - Compile the code into CloudFormation templates
 `rake spec` - Run unit tests
 `rake upload` - Upload the CloudFormation templates to s3
-`rake update` - Save required outputs from DependencyStack to .env.dependencies
+`rake update` - Save required outputs from DependencyStack to .env.dependencies.<ENVIRONMENT>
 `rake apply` - Deploy the CloudFormation templates
 
 ## Stack configuration

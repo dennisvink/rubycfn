@@ -2,7 +2,7 @@ require_relative "../core/git"
 
 def upload_stacks
   Dotenv.load(".env.private")
-  Dotenv.load(".env.dependencies")
+  Dotenv.load(".env.dependencies.#{ENV["ENVIRONMENT"]}")
   env_vars = load_env_vars
 
   set_aws_credentials(

@@ -3,7 +3,7 @@ require "dotenv"
 require_relative "core/classes"
 
 Dotenv.load(".env.private")
-Dotenv.load(".env.dependencies")
+Dotenv.load(".env.dependencies.#{ENV["ENVIRONMENT"]}")
 Dotenv.load(".env")
 Dotenv.load(".env.#{ENV["ENVIRONMENT"]}")
 

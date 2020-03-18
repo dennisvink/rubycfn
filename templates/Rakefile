@@ -36,7 +36,7 @@ task :clean do
   end
 end
 
-desc "Store dependencies of DependencyStack in .env.dependencies"
+desc "Store dependencies of DependencyStack in .env.dependencies.<ENVIRONMENT>"
 task :dependencies do
   require_relative "lib/core/dependencies.rb"
 end

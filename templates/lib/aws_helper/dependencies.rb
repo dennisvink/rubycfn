@@ -1,6 +1,6 @@
 def load_env_vars
   Dotenv.load(".env.private")
-  Dotenv.load(".env.dependencies")
+  Dotenv.load(".env.dependencies.#{ENV["ENVIRONMENT"]}")
   Dotenv.load(".env")
   Dotenv.load(".env.#{ENV["ENVIRONMENT"]}")
 
