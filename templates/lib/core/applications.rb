@@ -34,8 +34,10 @@ def env_vars_to_array(val)
   vars
 end
 
+@ignore_params = {}
+
 # Return the mandatory Stack parameters and add all defined ENV vars from config.yaml
-def parent_parameters(env_vars)
+def parent_parameters(env_vars, simple_name)
   params = {
     "Vpc": :vpc_stack.ref("Outputs.Vpc"),
     "Cluster": :ecs_stack.ref("Outputs.EcsCluster"),
@@ -50,6 +52,11 @@ def parent_parameters(env_vars)
   }
 
   env_vars.each do |var|
+    TOPLEVEL_BINDING.eval("@ignore_params[:#{simple_name}] ||= []")
+    if var[:Value].class == Hash && var[:Value].keys[0] == :Ref
+      TOPLEVEL_BINDING.eval("@ignore_params[:#{simple_name}].push(\"#{var[:Name]}\")")
+      next
+    end
     params[var[:Name].cfnize] = var[:Value]
   end
   params
@@ -59,10 +66,17 @@ def application_parameters(env_vars)
   vars = []
 
   env_vars.each do |var|
-    vars.push(
-      Name: var[:Name],
-      Value: var[:Name].cfnize.ref
-    )
+    if var[:Value].class == Hash && var[:Value].keys[0] == :Ref
+      vars.push(
+        Name: var[:Name],
+        Value: var[:Value]
+      )
+    else
+      vars.push(
+        Name: var[:Name],
+        Value: var[:Name].cfnize.ref
+      )
+    end
   end
   vars
 end
@@ -83,14 +97,23 @@ def create_applications
 
     r._id("#{resource_name}Stack")
     r.property(:template_url) { "#{simple_name}stack" }
-    r.property(:parameters) { parent_parameters(env_vars) }
+    r.property(:parameters) { parent_parameters(env_vars, simple_name) }
     Object.const_set("#{resource_name}Stack", Module.new).class_eval <<-RUBY
       extend ActiveSupport::Concern
       include Rubycfn
 
       included do
 
+        def get_aliases(val)
+          aliases = []
+          return aliases if val["aliases"].nil?
+          return aliases if val["aliases"][environment].nil?
+          val["aliases"][environment]
+        end
+
+        ignore_params = TOPLEVEL_BINDING.eval("@ignore_params[:#{simple_name}]")
         application_vars.each do |var|
+          next if ignore_params.include? var[:Name]
           Object.class_eval("parameter var[:Name].to_sym, description: 'Value for ENV var \#{var[:Name]}'")
         end
 
@@ -134,17 +157,30 @@ def create_applications
                   description: "ARN of ECS deployment failure Lambda",
                   type: "String"
 
+        variable :aliases,
+                 value: app_config,
+                 filter: :get_aliases
+
+        variable :min_override,
+                 value: app_config[environment].nil? ? "" : app_config[environment]["min"].to_s
+
         variable :min,
-                 value: app_config["min"].to_s
+                 value: min_override.empty? ? app_config["min"].to_s : min_override
+
+        variable :max_override,
+                 value: app_config[environment].nil? ? "" : app_config[environment]["max"].to_s
 
         variable :max,
-                 value: app_config["max"].to_s
+                 value: max_override.empty? ? app_config["max"].to_s : max_override
 
         variable :container_port,
                  value: app_config["container_port"].to_s
 
+        variable :memory_override,
+                 value: app_config[environment].nil? ? "" : app_config[environment]["mem"].to_s
+
         variable :memory,
-                 value: app_config["mem"].to_s
+                 value: memory_override.empty? ? app_config["mem"].to_s : memory_override
 
         variable :image,
                  value: app_config["image"]
@@ -158,11 +194,14 @@ def create_applications
 
 
         description generate_stack_description("#{resource_name}Stack")
+
         resource :service,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ECS::Service" do |r|
           r.property(:service_name) { "#{environment}-<%= project_name %>-#{simple_name}" }
           r.property(:cluster) { :cluster.ref }
           r.property(:role) { :service_role.ref }
+          r.property(:health_check_grace_period_seconds) { 120 }
           r.property(:desired_count) { min.to_i }
           r.property(:task_definition) { :task_definition.ref }
           r.property(:load_balancers) do
@@ -175,6 +214,7 @@ def create_applications
         end
 
         resource :application_deployment_health,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "Custom::EcsDeploymentCheck" do |r|
           r.property(:service_token) { :application_deployment_failure_rollback_function_arn.ref }
           r.property("AWSRegion") { "${AWS::Region}".fnsub }
@@ -183,6 +223,7 @@ def create_applications
         end
 
         resource :task_definition,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ECS::TaskDefinition" do |r|
           r.property(:family) { "#{simple_name}-service" }
           r.property(:container_definitions) do
@@ -211,12 +252,14 @@ def create_applications
         end
 
         resource :cloud_watch_logs_group,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::Logs::LogGroup" do |r|
           r.property(:log_group_name) { ["AWS::StackName".ref, "-#{simple_name}"].fnjoin }
           r.property(:retention_in_days) { 30 }
         end
 
         resource :target_group,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ElasticLoadBalancingV2::TargetGroup" do |r|
           r.property(:vpc_id) { :vpc.ref }
           r.property(:port) { container_port.to_i }
@@ -234,6 +277,7 @@ def create_applications
         end
 
         resource :listener_rule,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ElasticLoadBalancingV2::ListenerRule" do |r|
           r.property(:listener_arn) { :listener.ref }
           r.property(:priority) { priority.to_i }
@@ -244,7 +288,7 @@ def create_applications
                 "Values": [
                   ["origin", name.tr("_", "-"), :hosted_zone_name.ref].fnjoin("."),
                   [name.tr("_", "-"), :hosted_zone_name.ref].fnjoin(".")
-                ]
+                ] + aliases
               }
             ]
           end
@@ -275,6 +319,7 @@ def create_applications
         }
 
         resource :service_role,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::IAM::Role" do |r|
           r.property(:role_name) { "ecs-service-${AWS::StackName}".fnsub }
           r.property(:path) { "/" }
@@ -330,6 +375,7 @@ def create_applications
         end
 
         resource :application_load_balancer_record,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::Route53::RecordSet" do |r|
           r.property(:type) { "A" }
           r.property(:name) { ["origin", name.tr("_", "-"), :hosted_zone_name.ref].fnjoin(".") }
@@ -344,6 +390,7 @@ def create_applications
         end
 
         resource :service_scalable_target,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ApplicationAutoScaling::ScalableTarget" do |r|
           r.property(:max_capacity) { max.to_i }
           r.property(:min_capacity) { min.to_i }
@@ -354,6 +401,7 @@ def create_applications
         end
 
         resource :service_scale_out_policy,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ApplicationAutoScaling::ScalingPolicy" do |r|
           r.property(:policy_name) { "ServiceScaleOutPolicy" }
           r.property(:policy_type) { "StepScaling" }
@@ -374,6 +422,7 @@ def create_applications
         end
 
         resource :service_scale_in_policy,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::ApplicationAutoScaling::ScalingPolicy" do |r|
           r.property(:policy_name) { "ServiceScaleInPolicy" }
           r.property(:policy_type) { "StepScaling" }
@@ -394,6 +443,7 @@ def create_applications
         end
 
         resource :cpu_scale_out_alarm,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::CloudWatch::Alarm" do |r|
           r.property(:alarm_name) { "CPU utilization greater than 90% on #{simple_name}-#{environment}" }
           r.property(:alarm_description) { "Alarm if cpu utilization greater than 90% of reserved cpu" }
@@ -420,6 +470,7 @@ def create_applications
         end
 
         resource :cpu_scale_in_alarm,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::CloudWatch::Alarm" do |r|
           r.property(:alarm_name) { "CPU utilization less than 70% on #{simple_name}-#{environment}" }
           r.property(:alarm_description) { "Alarm if cpu utilization greater than 70% of reserved cpu" }
@@ -446,6 +497,7 @@ def create_applications
         end
 
         resource :ecs_application_certificate,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "Custom::Certificate" do |r|
           r.property(:service_token) { :certificate_provider_function_arn.ref }
           r.property(:region) { "us-east-1" }
@@ -454,6 +506,7 @@ def create_applications
         end
 
         resource :ecs_application_issued_certificate,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "Custom::IssuedCertificate" do |r|
           r.property(:service_token) { :certificate_provider_function_arn.ref }
           r.property(:region) { "us-east-1" }
@@ -461,6 +514,7 @@ def create_applications
         end
 
         resource :ecs_application_dns_record,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "Custom::CertificateDNSRecord" do |r|
           r.property(:service_token) { :certificate_provider_function_arn.ref }
           r.property(:region) { "us-east-1" }
@@ -469,6 +523,7 @@ def create_applications
         end
 
         resource :ecs_application_validation_record,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::Route53::RecordSetGroup" do |r|
           r.property(:hosted_zone_id) { :hosted_zone_id.ref }
           r.property(:record_sets) do
@@ -492,6 +547,7 @@ def create_applications
                    :ecs_application_issued_certificate,
                    :application_deployment_health
                  ],
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::CloudFront::Distribution" do |r|
           r.property(:distribution_config) do
             {
@@ -547,6 +603,7 @@ def create_applications
         end
 
         resource :application_cloudfront_dns_record,
+                 amount: max.to_i.positive? ? 1 : 0,
                  type: "AWS::Route53::RecordSetGroup" do |r|
           r.property(:hosted_zone_id) { :hosted_zone_id.ref }
           r.property(:record_sets) do
